@@ -106,7 +106,7 @@ $minorProblems = $symfonyRequirements->getFailedRecommendations();
                             To change settings, create a "<strong>php.ini</strong>".
                         <?php endif; ?>
                     </p>
-                <?php endif; ?>
+                        <?php endif; ?>
 
                 <?php if (!count($majorProblems) && !count($minorProblems)): ?>
                     <p class="ok">Your configuration looks good to run Symfony.</p>

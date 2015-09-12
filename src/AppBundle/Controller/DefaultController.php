@@ -103,13 +103,19 @@ class DefaultController extends Controller
      */
     public function workspaceAction(Request $request)
     {
-        if ($this->get('session')->get('is_logged', false) === false) {
-            return $this->redirectToRoute('login');
-        }
-
         $formBuilder = $this->createFormBuilder();
 
         $form = $formBuilder
+            ->add(
+                'username',
+                'text',
+                array(
+                    'label' => 'Instagram username',
+                    'data'  => $this->get('session')->get('is_logged', false)
+                        ? $this->get('session')->get('instagram')['user']['username']
+                        : '',
+                )
+            )
             ->add(
                 'count',
                 'number',
@@ -160,6 +166,7 @@ class DefaultController extends Controller
                     'count'      => $data['count'],
                     'source'     => $source,
                     'imagesOnly' => $data['imagesOnly'],
+                    'username' => $data['username'],
                 )
             );
         }
@@ -202,13 +209,5 @@ class DefaultController extends Controller
                 'links'  => $links,
             )
         );
-    }
-
-    /**
-     * @Route("/workspace/collage/ajax", name="make_collage_ajax")
-     * @Method("POST")
-     */
-    public function makeCollageAjaxAction(Request $request)
-    {
     }
 }
