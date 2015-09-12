@@ -1,5 +1,10 @@
 #!/bin/sh
 
+sudo fallocate -l 1G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
 DB_ROOT_USER="root"
 DB_ROOT_PASS="nopass"
 DBNAME="vitto"
