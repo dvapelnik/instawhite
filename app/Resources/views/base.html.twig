@@ -22,7 +22,7 @@
         <div class="f-nav-bar">
             <div class="f-nav-bar-body">
                 <div class="f-nav-bar-title">
-                    <a href="#">InstaWhite</a>
+                    <a href="{{ path('homepage') }}">InstaWhite</a>
                 </div>
                 <ul class="f-nav">
                     {% if app.session.get('is_logged') %}
@@ -31,6 +31,9 @@
                         {% dump(instagram.access_token) %}
 
                         <li>
+                            <a href="{{ path('workspace') }}">Workspace</a>
+                        </li>
+                        <li>
                             <a href="{{ path('logout') }}">
                                 Logout ({{ instagram.user.username }})
                             </a>
@@ -38,7 +41,7 @@
                     {% else %}
                         <li><a href="{{ path('login') }}">Login</a></li>
                     {% endif %}
-                    <li><a href="{{ path('homepage') }}">Main page</a></li>
+
                 </ul>
             </div>
         </div>

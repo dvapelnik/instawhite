@@ -93,4 +93,12 @@ class DefaultController extends Controller
 
         return $this->redirectToRoute('homepage');
     }
+
+    /**
+     * @Route("/workspace", name="workspace")
+     */
+    public function workspaceAction(Request $request)
+    {
+        return $this->render(':default:workspace.html.twig');
+    }
 }
