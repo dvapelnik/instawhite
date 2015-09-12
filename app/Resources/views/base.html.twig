@@ -1,5 +1,12 @@
 <!DOCTYPE html>
-<html>
+<!--[if lt IE 7]>
+<html class="lt-ie9 lt-ie8 lt-ie7" lang="en"><![endif]-->
+<!--[if IE 7]>
+<html class="lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if IE 8]>
+<html class="lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!-->
+<html lang="en"><!--<![endif]-->
 <head>
     <meta charset="UTF-8"/>
     <title>{% block title %}Welcome!{% endblock %}</title>
@@ -9,6 +16,28 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}"/>
 </head>
 <body>
+
+<div class="g">
+    <div class="g-row">
+        <div class="f-nav-bar">
+            <div class="f-nav-bar-body">
+                <div class="f-nav-bar-title">
+                    <a href="#">InstaWhite</a>
+                </div>
+                <ul class="f-nav">
+                    <li><a href="{{ path('homepage') }}">Main page</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="g-row">
+        <div class="g-12">
+            ...
+        </div>
+    </div>
+</div>
+
+
 {% block body %}{% endblock %}
 {% block javascripts %}{% endblock %}
 </body>
