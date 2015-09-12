@@ -7,3 +7,12 @@ services:
 #    service_name:
 #        class: AppBundle\Directory\ClassName
 #        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
+    instagram.media_retriever:
+        class: AppBundle\Instagram\MediaRetriever
+        calls:
+            - [ setContainer, [ @service_container ]]
+    instagram.user_retriever:
+            class: AppBundle\Instagram\UserRetriever
+            calls:
+                - [ setContainer, [ @service_container ]]
+                - [ setStorageKey, [ instagram.users ]]

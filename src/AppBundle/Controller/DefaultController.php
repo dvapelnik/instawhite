@@ -2,7 +2,8 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Instagram\MediaRetriever;
+use AppBundle\Instagram\MayBeNeedAuthException;
+use AppBundle\Instagram\UserNotFoundException;
 use Guzzle\Service\Client;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -126,7 +127,7 @@ class DefaultController extends Controller
                         new NotBlank(),
                         new Range(
                             array(
-                                'min' => 10,
+                                'min' => 1,
                                 'max' => 100,
                             )
                         ),
@@ -138,7 +139,7 @@ class DefaultController extends Controller
                 'from_media',
                 'submit',
                 array(
-                    'label' => 'Make from own media',
+                    'label' => 'Make from media',
                     'attr'  => array('class' => 'f-bu f-bu-default'),
                 )
             )
@@ -146,8 +147,11 @@ class DefaultController extends Controller
                 'from_feed',
                 'submit',
                 array(
-                    'label' => 'Make from my feed',
-                    'attr'  => array('class' => 'f-bu f-bu-success'),
+                    'label' => 'Make from feed',
+                    'attr'  => array(
+                        'class'    => 'f-bu f-bu-success',
+                        'disabled' => !$this->get('session')->get('is_logged', false),
+                    ),
                 )
             )->getForm();
 
@@ -185,28 +189,59 @@ class DefaultController extends Controller
      */
     public function makeCollage(Request $request)
     {
-        $instagramData = $this->get('session')->get('instagram');
-        $count = $request->get('count', 10);
-        $source = $request->get('source', 'feed');
-        $imagesOnly = intval($request->get('imagesOnly', 1));
+        $imRetriever = $this->get('instagram.media_retriever');
 
-        $imRetriever = new MediaRetriever(
-            $count, $source,
-            $instagramData['access_token'],
-            array(
-                'user-id'    => $instagramData['user']['id'],
-                'imagesOnly' => !!$imagesOnly,
-            )
-        );
+        //region Update options
+        if (null !== $request->get('count', null)) {
+            $imRetriever->setCount(intval($request->get('count')));
+        }
 
-        $links = $imRetriever->getImageLinks();
+        if (null !== $request->get('source', null)) {
+            $imRetriever->setSource($request->get('source'));
+        }
+
+        if (null !== $request->get('imagesOnly', null)) {
+            $imRetriever->setImagesOnly(!!intval($request->get('imagesOnly')));
+        }
+
+        if (null !== $request->get('username', null)) {
+            try {
+                $imRetriever->setUserId(
+                    $this->get('instagram.user_retriever')->getUserId(
+                        $request->get('username')
+                    )
+                );
+            } catch (UserNotFoundException $e) {
+                return $this->createNotFoundException();
+            } catch (\Exception $e) {
+            }
+        } else {
+            throw $this->createNotFoundException();
+        }
+        //endregion
+
+        try {
+            list($links, $isFullyRequested) = $imRetriever->getImageLinks();
+        } catch (MayBeNeedAuthException $e) {
+            $this->addFlash('try-to-auth', 'Looks like action need to auth with Instagram');
+
+            return $this->redirectToRoute('login');
+        } catch (\Exception $e) {
+            var_dump($e);
+        }
+
+        if (false === $isFullyRequested) {
+            $this->addFlash(
+                'is-not-fully-requested-notice',
+                'Count of images on medis less then requested count'
+            );
+        }
 
         return $this->render(
             ':default:makeCollage.html.twig',
             array(
-                'count'  => $count,
-                'source' => $source,
-                'links'  => $links,
+                'links'    => $links,
+                'username' => $request->get('username'),
             )
         );
     }

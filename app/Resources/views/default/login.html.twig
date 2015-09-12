@@ -1,6 +1,13 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+    {% for flashMessage in app.session.flashbag.get('try-to-auth') %}
+        <div class="g-row">
+            <div class="g-12">
+                <div class="f-message"> {{ flashMessage }} </div>
+            </div>
+        </div>
+    {% endfor %}
     <div class="g-row">
         <div class="g-12" style="text-align: center">
             <a

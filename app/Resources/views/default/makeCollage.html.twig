@@ -1,6 +1,20 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+    {% for flashMessage in app.session.flashbag.get('is-not-fully-requested-notice') %}
+        <div class="g-row">
+            <div class="g-12">
+                <div class="f-message"> {{ flashMessage }} </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <div class="g-row">
+        <div class="g-12">
+            <span>{{ username }}</span>
+        </div>
+    </div>
+
     {% for image in links %}
         <img src="{{ image }}" alt="{{ image }}" style="width: 100px">
     {% endfor %}

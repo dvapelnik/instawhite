@@ -2,21 +2,27 @@
 namespace AppBundle\Instagram;
 
 use Guzzle\Service\Client;
+use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class MediaRetriever
+class MediaRetriever implements ContainerAwareInterface
 {
+    /** @var  Container */
+    private $container;
+
     /** @var  int */
-    private $count;
+    private $count = 16;
 
     /** @var  string */
-    private $source;
+    private $source = 'feed';
 
     /** @var  string */
     private $accessToken;
 
     private $userId;
 
-    private $imagesOnly;
+    private $imagesOnly = true;
 
     private $itemsPerRequestLimit = 30;
 
@@ -24,41 +30,91 @@ class MediaRetriever
     private $apiMediaUrlSuffix = '/users/{user-id}/media/recent';
     private $apiFeedUrlSuffix = '/users/self/feed';
 
+    //region Setters
     /**
-     * MediaRetriever constructor.
+     * Sets the Container.
      *
-     * @param int $count
-     * @param string $source
-     * @param $accessToken
-     * @param array $options
+     * @param ContainerInterface|null $container A ContainerInterface instance or null
      *
-     * @throws \Exception
+     * @api
      */
-    public function __construct($count, $source, $accessToken, $options = array())
+    public function setContainer(ContainerInterface $container = null)
+    {
+        $this->container = $container;
+    }
+
+    /**
+     * @param int $count
+     *
+     * @return MediaRetriever
+     */
+    public function setCount($count)
     {
         $this->count = $count;
-        $this->source = $source;
-        $this->accessToken = $accessToken;
 
-        $this->userId = isset($options['user-id']) ? $options['user-id'] : null;
-        $this->imagesOnly = isset($options['imagesOnly']) ? $options['imagesOnly'] : true;
-
-        if ($this->source === 'media' && $this->userId === null) {
-            throw new \Exception("Option 'user-id' is required when source is '{$this->source}'");
-        }
+        return $this;
     }
+
+    /**
+     * @param string $source
+     *
+     * @return MediaRetriever
+     */
+    public function setSource($source)
+    {
+        $this->source = $source;
+
+        return $this;
+    }
+
+    /**
+     * @param boolean $imagesOnly
+     *
+     * @return MediaRetriever
+     */
+    public function setImagesOnly($imagesOnly)
+    {
+        $this->imagesOnly = $imagesOnly;
+
+        return $this;
+    }
+
+    /**
+     * @param mixed $userId
+     *
+     * @return MediaRetriever
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+    //endregion
 
     public function getImageLinks()
     {
         $count = $this->count;
         $resultArray = array();
 
+        $isFullyRequested = true;
+
         $client = new Client($this->getRequestUrl());
 
         $request = $client->createRequest('GET');
-        $request->getQuery()
-            ->set('access_token', $this->accessToken)
-            ->set('count', $this->itemsPerRequestLimit);
+        $request->getQuery()->set('count', $this->itemsPerRequestLimit);
+
+        if ($this->container->get('session')->get('is_logged')) {
+            $request->getQuery()->set(
+                'access_token',
+                $this->container->get('session')->get('instagram')['access_token']
+            );
+        } else {
+            $request->getQuery()->set(
+                'client_id',
+                $this->container->getParameter('instagram.client_id')
+            );
+        }
 
         $nextApiUrl = $request->getUrl();
 
@@ -89,7 +145,23 @@ class MediaRetriever
                     )
                 );
 
-                $nextApiUrl = $responseArray['pagination']['next_url'];
+                if (count($responseArray['pagination'])) {
+                    $nextApiUrl = $responseArray['pagination']['next_url'];
+                } else {
+                    $isFullyRequested = false;
+
+                    break;
+                }
+            } catch (\Guzzle\Http\Exception\ClientErrorResponseException $e) {
+                $_request = $e->getRequest();
+                $_response = $e->getResponse();
+
+                if ($_request->getQuery()->get('client_id') &&
+                    $_response->getReasonPhrase() === 'BAD REQUEST' &&
+                    $_response->getStatusCode() === 400
+                ) {
+                    throw new MayBeNeedAuthException();
+                }
             } catch (\Exception $e) {
                 break;
             }
@@ -97,7 +169,16 @@ class MediaRetriever
             $count -= count($items);
         }
 
-        return array_slice($resultArray, 0, $this->count);
+        return array(
+            array_slice(
+                $resultArray,
+                0,
+                count($resultArray) > $this->count
+                    ? $this->count
+                    : count($resultArray)
+            ),
+            $isFullyRequested,
+        );
     }
 
     private function getRequestUrl()
