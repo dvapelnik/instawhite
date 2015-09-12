@@ -26,12 +26,11 @@
                     <a href="{{ path('homepage') }}">InstaWhite</a>
                 </div>
                 <ul class="f-nav">
+                    <li>
+                        <a href="{{ path('workspace') }}">Workspace</a>
+                    </li>
                     {% if app.session.get('is_logged') %}
                         {% set instagram = app.session.get('instagram') %}
-
-                        <li>
-                            <a href="{{ path('workspace') }}">Workspace</a>
-                        </li>
                         <li>
                             <a href="{{ path('logout') }}">
                                 Logout ({{ instagram.user.username }})
