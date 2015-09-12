@@ -52,8 +52,33 @@ class MediaManager implements ContainerAwareInterface
 
     public function saveImage($imageUrl)
     {
-        $client = new Client();
+        return $this->doSaveImage($imageUrl, $this->getDestinationFileName($imageUrl));
+    }
 
+    private function doSaveImage($source, $destination)
+    {
+
+        if (file_exists($destination)) {
+            return $destination;
+        }
+
+        try {
+            $this->makeSaveImageRequest($source, $destination)->send();
+
+            return $destination;
+        } catch (\Exception $e) {
+            throw new \Exception('File not saved');
+        }
+
+    }
+
+    private function makeSaveImageRequest($source, $destination)
+    {
+        return (new Client())->get($source)->setResponseBody($destination);
+    }
+
+    private function getDestinationFileName($imageUrl)
+    {
         $tmpRoot = implode(
             DIRECTORY_SEPARATOR,
             array(
@@ -62,7 +87,7 @@ class MediaManager implements ContainerAwareInterface
             )
         );
 
-        $savedImageFullPath = implode(
+        $saveImageFullPath = implode(
             DIRECTORY_SEPARATOR,
             array(
                 $tmpRoot,
@@ -70,17 +95,40 @@ class MediaManager implements ContainerAwareInterface
             )
         );
 
-        if (file_exists($savedImageFullPath)) {
-            return $savedImageFullPath;
-        }
+        return $saveImageFullPath;
+    }
 
-        try {
-            $client->get($imageUrl)
-                ->setResponseBody($savedImageFullPath)->send();
+    public function saveImages($imageUrls)
+    {
+        $savedImagePaths = array();
 
-            return $savedImageFullPath;
-        } catch (\Exception $e) {
-            throw new \Exception('File not saved');
-        }
+        $that = $this;
+
+        $requests = array_map(
+            function ($imageUrl) use (&$savedImagePaths) {
+                $destination = $this->getDestinationFileName($imageUrl);
+
+                $savedImagePaths[$imageUrl] = $destination;
+
+                return $this->makeSaveImageRequest($imageUrl, $destination);
+            },
+            array_filter(
+                $imageUrls,
+                function ($imageUrl) use (&$savedImagePaths) {
+                    $destination = $this->getDestinationFileName($imageUrl);
+                    if (file_exists($destination)) {
+                        $savedImagePaths[$imageUrl] = $destination;
+
+                        return false;
+                    }
+
+                    return true;
+                }
+            )
+        );
+
+        (new Client())->send($requests);
+
+        return $savedImagePaths;
     }
 }
