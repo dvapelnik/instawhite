@@ -8,6 +8,8 @@
 
 /web/assets/
 /app/sessions/
+!/app/tmp/image_cache/.gitkeep
+/app/tmp/*
 
 /web/bundles/
 /app/bootstrap.php.cache

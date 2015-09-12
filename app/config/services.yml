@@ -11,8 +11,15 @@ services:
         class: AppBundle\Instagram\MediaRetriever
         calls:
             - [ setContainer, [ @service_container ]]
+            - [ setMediaManager, [ @instagram.media_manager ]]
     instagram.user_retriever:
-            class: AppBundle\Instagram\UserRetriever
-            calls:
-                - [ setContainer, [ @service_container ]]
-                - [ setStorageKey, [ instagram.users ]]
+        class: AppBundle\Instagram\UserRetriever
+        calls:
+            - [ setContainer, [ @service_container ]]
+            - [ setStorageKey, [ instagram.users ]]
+    instagram.media_manager:
+        class: AppBundle\Instagram\MediaManager
+        calls:
+            - [ setContainer, [ @service_container ]]
+            - [ setSavePath, [ %kernel.root_dir% ]]
+            - [ setImageTmpFolder, [ tmp/image_cache ]]

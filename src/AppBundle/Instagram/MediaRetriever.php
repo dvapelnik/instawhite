@@ -11,6 +11,9 @@ class MediaRetriever implements ContainerAwareInterface
     /** @var  Container */
     private $container;
 
+    /** @var  MediaManager */
+    private $mediaManager;
+
     /** @var  int */
     private $count = 16;
 
@@ -41,6 +44,18 @@ class MediaRetriever implements ContainerAwareInterface
     public function setContainer(ContainerInterface $container = null)
     {
         $this->container = $container;
+    }
+
+    /**
+     * @param MediaManager $mediaManager
+     *
+     * @return MediaRetriever
+     */
+    public function setMediaManager($mediaManager)
+    {
+        $this->mediaManager = $mediaManager;
+
+        return $this;
     }
 
     /**
@@ -90,11 +105,13 @@ class MediaRetriever implements ContainerAwareInterface
 
         return $this;
     }
+
     //endregion
 
     public function getImageLinks()
     {
         $count = $this->count;
+        $mediaManager = $this->mediaManager;
         $resultArray = array();
 
         $isFullyRequested = true;
@@ -169,14 +186,21 @@ class MediaRetriever implements ContainerAwareInterface
             $count -= count($items);
         }
 
+        // Save images
+        $imageUrls = array_slice(
+            $resultArray,
+            0,
+            count($resultArray) > $this->count
+                ? $this->count
+                : count($resultArray)
+        );
+
+        foreach ($imageUrls as $imageUrl) {
+            $savedImageFullPath = $mediaManager->saveImage($imageUrl);
+        }
+
         return array(
-            array_slice(
-                $resultArray,
-                0,
-                count($resultArray) > $this->count
-                    ? $this->count
-                    : count($resultArray)
-            ),
+            $imageUrls,
             $isFullyRequested,
         );
     }
@@ -193,4 +217,6 @@ class MediaRetriever implements ContainerAwareInterface
             )
         );
     }
+
+
 }

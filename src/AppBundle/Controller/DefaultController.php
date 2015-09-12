@@ -235,6 +235,13 @@ class DefaultController extends Controller
 
             return $this->redirectToRoute('login');
         } catch (\Exception $e) {
+            $this->get('logger')->warning(
+                'Exception',
+                array(
+                    'message' => $e->getMessage(),
+                    'trace'   => $e->getTrace(),
+                )
+            );
         }
 
         if (false === $isFullyRequested) {
