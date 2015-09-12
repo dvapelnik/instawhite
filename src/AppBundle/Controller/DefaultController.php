@@ -19,13 +19,7 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
-        // replace this example code with whatever you need
-        return $this->render(
-            'default/index.html.twig',
-            array(
-                'base_dir' => realpath($this->container->getParameter('kernel.root_dir').'/..'),
-            )
-        );
+        return $this->redirectToRoute('workspace');
     }
 
     /**
@@ -139,8 +133,7 @@ class DefaultController extends Controller
                         ),
                     ),
                 )
-            )
-            ->add('imagesOnly', 'checkbox', array('label' => 'Exclude videos?', 'data' => true))
+            )->add('imagesOnly', 'checkbox', array('label' => 'Exclude videos?', 'data' => true))
             ->add(
                 'from_media',
                 'submit',
@@ -218,7 +211,7 @@ class DefaultController extends Controller
                     )
                 );
             } catch (UserNotFoundException $e) {
-                return $this->createNotFoundException();
+                throw $this->createNotFoundException();
             } catch (\Exception $e) {
             }
         } else {
