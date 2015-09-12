@@ -26,7 +26,15 @@
                 </div>
                 <ul class="f-nav">
                     {% if app.session.get('is_logged') %}
-                        <li><a href="{{ path('logout') }}">Logout</a></li>
+                        {% set instagram = app.session.get('instagram') %}
+
+                        {% dump(instagram.access_token) %}
+
+                        <li>
+                            <a href="{{ path('logout') }}">
+                                Logout ({{ instagram.user.username }})
+                            </a>
+                        </li>
                     {% else %}
                         <li><a href="{{ path('login') }}">Login</a></li>
                     {% endif %}
