@@ -1,0 +1,7 @@
+{
+  "name": "insta-white",
+  "dependencies": {
+    "css-framework": "git://github.com/agat/css-framework#effc9b413d",
+    "html5shiv": "~3.7.3"
+  }
+}
