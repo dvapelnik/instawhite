@@ -6,6 +6,9 @@
 /bower_components/
 /node_modules/
 
+/web/assets/
+/app/sessions/
+
 /web/bundles/
 /app/bootstrap.php.cache
 /app/cache/*

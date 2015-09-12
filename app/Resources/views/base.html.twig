@@ -10,6 +10,7 @@
 <head>
     <meta charset="UTF-8"/>
     <title>{% block title %}Welcome!{% endblock %}</title>
+    {% block js_head %}{% endblock %}
     {% block stylesheets %}
         <link rel="stylesheet" href="{{ asset('assets/css/framework.min.css') }}">
     {% endblock %}
@@ -54,6 +55,6 @@
 </div>
 
 
-{% block javascripts %}{% endblock %}
+{% block js_foot %}{% endblock %}
 </body>
 </html>
