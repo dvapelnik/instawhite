@@ -29,8 +29,6 @@
                     {% if app.session.get('is_logged') %}
                         {% set instagram = app.session.get('instagram') %}
 
-                        {% dump(instagram.access_token) %}
-
                         <li>
                             <a href="{{ path('workspace') }}">Workspace</a>
                         </li>
@@ -42,7 +40,6 @@
                     {% else %}
                         <li><a href="{{ path('login') }}">Login</a></li>
                     {% endif %}
-
                 </ul>
             </div>
         </div>

@@ -1,5 +1,31 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+    <div class="g-row">
+        <div class="g-12">
+            {{ form_start(form) }}
+            <div class="g-row">
+                <div class="g-12">
+                    <h1 style="text-align: center">Fill this form with count of media for collage</h1>
 
+                    <h2 style="text-align: center">And check source of media</h2>
+                </div>
+            </div>
+            <div class="g-row">
+                <div class="g-4" style="text-align: right"> {{ form_label(form.count) }}</div>
+                <div class="g-4" style="text-align: center">{{ form_widget(form.count) }}</div>
+                <div class="g-4" style="text-align: left">{{ form_errors(form.count) }}</div>
+            </div>
+            <div class="g-row">
+                <div class="g-4" style="text-align: right"> {{ form_label(form.imagesOnly) }}</div>
+                <div class="g-4" style="text-align: center">{{ form_widget(form.imagesOnly) }}</div>
+                <div class="g-4" style="text-align: left">{{ form_errors(form.imagesOnly) }}</div>
+            </div>
+            <div class="g-row">
+                <div class="g-6" style="text-align: right;">{{ form_widget(form.from_media) }}</div>
+                <div class="g-6" style="text-align: left;">{{ form_widget(form.from_feed) }}</div>
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
 {% endblock %}

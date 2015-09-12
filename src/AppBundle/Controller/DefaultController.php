@@ -2,10 +2,14 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Instagram\MediaRetriever;
 use Guzzle\Service\Client;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Range;
 
 class DefaultController extends Controller
 {
@@ -86,7 +90,7 @@ class DefaultController extends Controller
             return $this->redirectToRoute('login');
         }
 
-        $responseBodyArray = json_decode($response->getBody(true));
+        $responseBodyArray = json_decode($response->getBody(true), true);
 
         $this->get('session')->set('instagram', $responseBodyArray);
         $this->get('session')->set('is_logged', true);
@@ -103,6 +107,108 @@ class DefaultController extends Controller
             return $this->redirectToRoute('login');
         }
 
-        return $this->render(':default:workspace.html.twig');
+        $formBuilder = $this->createFormBuilder();
+
+        $form = $formBuilder
+            ->add(
+                'count',
+                'number',
+                array(
+                    'label'       => 'Count of images',
+                    'data'        => 16,
+                    'constraints' => array(
+                        new NotBlank(),
+                        new Range(
+                            array(
+                                'min' => 10,
+                                'max' => 100,
+                            )
+                        ),
+                    ),
+                )
+            )
+            ->add('imagesOnly', 'checkbox', array('label' => 'Exclude videos?', 'data' => true))
+            ->add(
+                'from_media',
+                'submit',
+                array(
+                    'label' => 'Make from own media',
+                    'attr'  => array('class' => 'f-bu f-bu-default'),
+                )
+            )
+            ->add(
+                'from_feed',
+                'submit',
+                array(
+                    'label' => 'Make from my feed',
+                    'attr'  => array('class' => 'f-bu f-bu-success'),
+                )
+            )->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isValid()) {
+            $data = $form->getData();
+
+            $source = $form->get('from_feed')->isClicked()
+                ? 'feed'
+                : 'media';
+
+            return $this->redirectToRoute(
+                'make_collage',
+                array(
+                    'count'      => $data['count'],
+                    'source'     => $source,
+                    'imagesOnly' => $data['imagesOnly'],
+                )
+            );
+        }
+
+        return $this->render(
+            ':default:workspace.html.twig',
+            array(
+                'form' => $form->createView(),
+            )
+        );
+    }
+
+    /**
+     * @Route("/workspace/collage", name="make_collage")
+     * @Method("GET")
+     */
+    public function makeCollage(Request $request)
+    {
+        $instagramData = $this->get('session')->get('instagram');
+        $count = $request->get('count', 10);
+        $source = $request->get('source', 'feed');
+        $imagesOnly = intval($request->get('imagesOnly', 1));
+
+        $imRetriever = new MediaRetriever(
+            $count, $source,
+            $instagramData['access_token'],
+            array(
+                'user-id'    => $instagramData['user']['id'],
+                'imagesOnly' => !!$imagesOnly,
+            )
+        );
+
+        $links = $imRetriever->getImageLinks();
+
+        return $this->render(
+            ':default:makeCollage.html.twig',
+            array(
+                'count'  => $count,
+                'source' => $source,
+                'links'  => $links,
+            )
+        );
+    }
+
+    /**
+     * @Route("/workspace/collage/ajax", name="make_collage_ajax")
+     * @Method("POST")
+     */
+    public function makeCollageAjaxAction(Request $request)
+    {
     }
 }

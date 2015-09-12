@@ -1,0 +1,7 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    {% for image in links %}
+        <img src="{{ image }}" alt="{{ image }}" style="width: 100px">
+    {% endfor %}
+{% endblock %}
