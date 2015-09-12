@@ -2,11 +2,12 @@
 
 {% block body %}
     <div class="g-row">
-        <div class="g-4"></div>
-        <div class="g-4">
-            <a href="https://api.instagram.com/oauth/authorize/?client_id={{ client_id }}&redirect_uri={{ redirect_uri }}&response_type=code">Login
-                with instagram</a>
+        <div class="g-12" style="text-align: center">
+            <a
+                    class="f-bu f-bu-default"
+                    href="https://api.instagram.com/oauth/authorize/?client_id={{ client_id }}&redirect_uri={{ redirect_uri }}&response_type=code">
+                Login with instagram
+            </a>
         </div>
-        <div class="g-4"></div>
     </div>
 {% endblock %}

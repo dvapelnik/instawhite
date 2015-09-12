@@ -99,6 +99,10 @@ class DefaultController extends Controller
      */
     public function workspaceAction(Request $request)
     {
+        if ($this->get('session')->get('is_logged', false) === false) {
+            return $this->redirectToRoute('login');
+        }
+
         return $this->render(':default:workspace.html.twig');
     }
 }
