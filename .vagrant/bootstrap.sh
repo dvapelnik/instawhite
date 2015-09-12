@@ -25,7 +25,7 @@ sudo pecl install -Z xdebug
 sudo ln -s /var/www/html/.vagrant/20-xdebug.ini /etc/php5/apache2/conf.d
 sudo ln -s /var/www/html/.vagrant/30-xdebug.addition.ini /etc/php5/apache2/conf.d
 
-sudo apt-get install php5-gd
+sudo apt-get install php5-gd -y
 
 curl -s http://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer

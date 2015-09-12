@@ -227,7 +227,7 @@ class DefaultController extends Controller
         //endregion
 
         try {
-            list($links, $isFullyRequested) = $imRetriever->getImageLinks();
+            list($images, $isFullyRequested) = $imRetriever->getImageLinks();
         } catch (MayBeNeedAuthException $e) {
             $this->addFlash('try-to-auth', 'Looks like action need to auth with Instagram');
 
@@ -251,10 +251,15 @@ class DefaultController extends Controller
             );
         }
 
+        foreach ($images as &$image) {
+            $image['color'] = $this->container->get('instagram.image_comparator')
+                ->getImageMainColor($image['path'], false);
+        }
+
         return $this->render(
             ':default:makeCollage.html.twig',
             array(
-                'links' => $links,
+                'links' => $images,
                 'user'  => $this->get('instagram.user_retriever')->getUserData($request->get('username')),
             )
         );

@@ -23,7 +23,10 @@
         </div>
         <div class="g-9">
             {% for image in links %}
-                <img src="{{ image }}" alt="{{ image }}" style="width: 100px">
+                <img
+                        src="{{ image.url }}"
+                        alt="{{ image.url }}"
+                        style="width: 100px; border: 1px solid {{ image.color }}">
             {% endfor %}
         </div>
     </div>

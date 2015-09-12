@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "3f2252fcf3e55d4c06eec47522602441",
+    "hash": "8628619e0f6387f2a574b4d9cc8e1c70",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1043,6 +1043,58 @@
             "time": "2015-08-31 19:07:16"
         },
         {
+            "name": "ksubileau/color-thief-php",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ksubileau/color-thief-php.git",
+                "reference": "a5bb45b18f590c745c350d005ca4c5992bd83d7b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ksubileau/color-thief-php/zipball/a5bb45b18f590c745c350d005ca4c5992bd83d7b",
+                "reference": "a5bb45b18f590c745c350d005ca4c5992bd83d7b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.3",
+                "squizlabs/php_codesniffer": "~1.5"
+            },
+            "suggest": {
+                "ext-gd": "to use the GD image adapter.",
+                "ext-imagick": "to use the Imagick image adapter."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "ColorThief": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "CC-BY-2.5"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Subileau",
+                    "homepage": "http://www.kevinsubileau.fr"
+                }
+            ],
+            "description": "Grabs the dominant color or a representative color palette from an image.",
+            "homepage": "http://www.kevinsubileau.fr/projets/color-thief-php",
+            "keywords": [
+                "color",
+                "dominant",
+                "palette",
+                "php",
+                "thief"
+            ],
+            "time": "2014-10-30 10:49:52"
+        },
+        {
             "name": "monolog/monolog",
             "version": "1.17.1",
             "source": {
@@ -1678,16 +1730,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v1.21.1",
+            "version": "v1.21.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "ca8d3aa90b6a01c82e07909fe815d6b443e75a23"
+                "reference": "ddce1136beb8db29b9cd7dffa8ab518b978c9db3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/ca8d3aa90b6a01c82e07909fe815d6b443e75a23",
-                "reference": "ca8d3aa90b6a01c82e07909fe815d6b443e75a23",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/ddce1136beb8db29b9cd7dffa8ab518b978c9db3",
+                "reference": "ddce1136beb8db29b9cd7dffa8ab518b978c9db3",
                 "shasum": ""
             },
             "require": {
@@ -1735,7 +1787,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2015-08-26 08:58:31"
+            "time": "2015-09-09 05:28:51"
         }
     ],
     "packages-dev": [

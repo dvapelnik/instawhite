@@ -23,3 +23,7 @@ services:
             - [ setContainer, [ @service_container ]]
             - [ setSavePath, [ %kernel.root_dir% ]]
             - [ setImageTmpFolder, [ tmp/image_cache ]]
+    instagram.image_comparator:
+        class: AppBundle\Instagram\ImageComparator
+        calls:
+            - [ setContainer, [ @service_container ]]

@@ -108,7 +108,10 @@ class MediaManager implements ContainerAwareInterface
             function ($imageUrl) use (&$savedImagePaths) {
                 $destination = $this->getDestinationFileName($imageUrl);
 
-                $savedImagePaths[$imageUrl] = $destination;
+                $savedImagePaths[] = array(
+                    'url'  => $imageUrl,
+                    'path' => $destination,
+                );
 
                 return $this->makeSaveImageRequest($imageUrl, $destination);
             },
@@ -117,7 +120,10 @@ class MediaManager implements ContainerAwareInterface
                 function ($imageUrl) use (&$savedImagePaths) {
                     $destination = $this->getDestinationFileName($imageUrl);
                     if (file_exists($destination)) {
-                        $savedImagePaths[$imageUrl] = $destination;
+                        $savedImagePaths[] = array(
+                            'url'  => $imageUrl,
+                            'path' => $destination,
+                        );
 
                         return false;
                     }

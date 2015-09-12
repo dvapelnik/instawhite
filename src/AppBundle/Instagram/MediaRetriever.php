@@ -198,7 +198,7 @@ class MediaRetriever implements ContainerAwareInterface
         $savedImageFullPaths = $mediaManager->saveImages($imageUrls);
 
         return array(
-            $imageUrls,
+            $savedImageFullPaths,
             $isFullyRequested,
         );
     }
