@@ -7,6 +7,8 @@ imports:
 # http://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     locale: en
+    instagram.client_id: df28d3df650b451fbbc62eba97e7793a
+    instagram.client_secret: 4fbfc5ffa57248b0a19a0bdd44dd367e
 
 framework:
     #esi:             ~

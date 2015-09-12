@@ -7,13 +7,14 @@ if (!isset($_SERVER['HTTP_HOST'])) {
 if (!in_array(@$_SERVER['REMOTE_ADDR'], array(
     '127.0.0.1',
     '::1',
-))
+)
+)
 ) {
     header('HTTP/1.0 403 Forbidden');
     exit('This script is only accessible from localhost.');
 }
 
-require_once dirname(__FILE__) . '/../app/SymfonyRequirements.php';
+require_once dirname(__FILE__).'/../app/SymfonyRequirements.php';
 
 $symfonyRequirements = new SymfonyRequirements();
 
@@ -57,7 +58,7 @@ $minorProblems = $symfonyRequirements->getFailedRecommendations();
                     </button>
                 </div>
             </form>
-        </div>
+                </div>
     </div>
 
     <div class="sf-reset">
@@ -109,7 +110,7 @@ $minorProblems = $symfonyRequirements->getFailedRecommendations();
 
                 <?php if (!count($majorProblems) && !count($minorProblems)): ?>
                     <p class="ok">Your configuration looks good to run Symfony.</p>
-                <?php endif; ?>
+                        <?php endif; ?>
 
                 <ul class="symfony-install-continue">
                     <?php if (!count($majorProblems)): ?>
@@ -122,8 +123,8 @@ $minorProblems = $symfonyRequirements->getFailedRecommendations();
                 </ul>
             </div>
         </div>
-    </div>
+            </div>
     <div class="version">Symfony Standard Edition</div>
-</div>
+        </div>
 </body>
 </html>
