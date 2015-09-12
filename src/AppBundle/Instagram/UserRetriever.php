@@ -25,12 +25,20 @@ class UserRetriever implements ContainerAwareInterface
 
     public function getUserId($username)
     {
-        if (false === ($userId = $this->checkInCache($username))) {
+        $userApiData = $this->retrieveUser($username);
+
+        return $userApiData['id'];
+    }
+
+    private function retrieveUser($username)
+    {
+        if (false === ($userApiData = $this->checkInCache($username))) {
             $client = new Client();
 
             $request = $client->get('https://api.instagram.com/v1/users/search');
             $request->getQuery()
-                ->set('q', $username);
+                ->set('q', $username)
+                ->set('count', 10);
 
             if ($this->container->get('session')->get('is_logged')) {
                 $request->getQuery()->set(
@@ -46,10 +54,17 @@ class UserRetriever implements ContainerAwareInterface
 
                 $responseApiArray = json_decode($response->getBody(true), true);
 
-                if (count($responseApiArray['data']) > 0) {
-                    $userId = $responseApiArray['data'][0]['id'];
+                $filteredUsers = array_filter(
+                    $responseApiArray['data'],
+                    function ($user) use ($username) {
+                        return $user['username'] === $username;
+                    }
+                );
 
-                    $this->addToCache($username, $userId);
+                if (count($filteredUsers) == 1) {
+                    $userApiData = current($filteredUsers);
+
+                    $this->addToCache($username, $userApiData);
                 } else {
                     throw new UserNotFoundException("User '{$username}' not found");
                 }
@@ -58,7 +73,7 @@ class UserRetriever implements ContainerAwareInterface
             }
         }
 
-        return $userId;
+        return $userApiData;
     }
 
     private function checkInCache($username)
@@ -92,6 +107,11 @@ class UserRetriever implements ContainerAwareInterface
     private function updateStorage($storage)
     {
         $this->container->get('session')->set($this->storageKey, $storage);
+    }
+
+    public function getUserData($username)
+    {
+        return $this->retrieveUser($username);
     }
 
     /**

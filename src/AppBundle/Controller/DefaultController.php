@@ -240,8 +240,8 @@ class DefaultController extends Controller
         return $this->render(
             ':default:makeCollage.html.twig',
             array(
-                'links'    => $links,
-                'username' => $request->get('username'),
+                'links' => $links,
+                'user'  => $this->get('instagram.user_retriever')->getUserData($request->get('username')),
             )
         );
     }
