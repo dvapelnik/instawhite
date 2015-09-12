@@ -61,7 +61,7 @@ class DefaultController extends Controller
         $this->get('session')->set('instagram', array());
 
 
-        return $this->redirectToRoute('homepage');
+        return $this->redirectToRoute('workspace');
     }
 
     /**
@@ -96,7 +96,13 @@ class DefaultController extends Controller
         $this->get('session')->set('instagram', $responseBodyArray);
         $this->get('session')->set('is_logged', true);
 
-        return $this->redirectToRoute('homepage');
+        if (null !== ($redirectUrl = $this->get('session')->get('auth-redirect', null))) {
+            $this->get('session')->remove('auth-redirect');
+
+            return $this->redirect($redirectUrl);
+        } else {
+            return $this->redirectToRoute('workspace');
+        }
     }
 
     /**
@@ -225,9 +231,10 @@ class DefaultController extends Controller
         } catch (MayBeNeedAuthException $e) {
             $this->addFlash('try-to-auth', 'Looks like action need to auth with Instagram');
 
+            $this->get('session')->set('auth-redirect', $request->getUri());
+
             return $this->redirectToRoute('login');
         } catch (\Exception $e) {
-            var_dump($e);
         }
 
         if (false === $isFullyRequested) {
