@@ -153,6 +153,14 @@ class DefaultController extends Controller
                     'required' => false,
                 )
             )
+            ->add(
+                'colorDelta',
+                'number',
+                array(
+                    'label' => 'Select color delta (optimal is 150)',
+                    'data'  => 150,
+                )
+            )
             ->add('imagesOnly', 'checkbox', array('label' => 'Exclude videos?', 'data' => true))
             ->add(
                 'from_media',
@@ -166,7 +174,7 @@ class DefaultController extends Controller
                 'from_feed',
                 'submit',
                 array(
-                    'label' => 'Make from feed',
+                    'label' => 'Make from own feed',
                     'attr'  => array(
                         'class'    => 'f-bu f-bu-success',
                         'disabled' => !$this->get('session')->get('is_logged', false),
@@ -192,6 +200,7 @@ class DefaultController extends Controller
                     'palette'    => $data['palette'],
                     'usePalette' => $data['usePalette'],
                     'username'   => $data['username'],
+                    'colorDelta' => $data['colorDelta'],
                 )
             );
         }
@@ -253,6 +262,10 @@ class DefaultController extends Controller
         if (null !== $request->get('usePalette', null)) {
             $imRetriever->setUsePalette(!!intval($request->get('usePalette')));
         }
+
+        if (null !== $request->get('colorDelta', null)) {
+            $imRetriever->setColorDiffDelta(intval($request->get('colorDelta')));
+        }
         //endregion
 
         try {
@@ -287,15 +300,20 @@ class DefaultController extends Controller
             );
         }
 
+        dump($imRetriever->isUsePalette());
+
         return $this->render(
             ':default:makeCollage.html.twig',
             array(
                 'imagesIsFound' => count($images) > 0,
                 'links'         => $images,
                 'user'          => $userApiData,
-                'palette'       => $request->get('palette', null) === null
-                    ? false
-                    : '#'.$request->get('palette', null),
+                'palette'      => $imRetriever->isUsePalette() && $request->get('palette', null) !== null
+                    ? '#'.$request->get('palette', null)
+                    : false,
+                'sourceSuffix' => $imRetriever->getSource() === 'feed'
+                    ? 'own feed'
+                    : 'recent media',
             )
         );
     }

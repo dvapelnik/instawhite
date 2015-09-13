@@ -14,6 +14,12 @@
     {% endfor %}
 
     <div class="g-row">
+        <div class="g-12">
+            <h1 style="text-align: center">Images from {{ sourceSuffix }}</h1>
+        </div>
+    </div>
+
+    <div class="g-row">
         <div class="g-3" style="text-align: center">
             <img
                     style="border-radius: 150px"
@@ -31,8 +37,11 @@
                 <div class="g-row">
                     <div class="g-2"><span>Requested palette:</span></div>
                     <div class="g-7">
-                        <div style="height: 18px; width: 100%; background-color: {{ palette }}">
-                        </div>
+                        <div style="
+                                height: 18px;
+                                width: 100%;
+                                background-color: {{ palette }};
+                                border-radius: 6px;"></div>
                     </div>
                 </div>
 

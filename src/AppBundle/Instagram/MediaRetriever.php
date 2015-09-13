@@ -97,6 +97,14 @@ class MediaRetriever implements ContainerAwareInterface
     }
 
     /**
+     * @return string
+     */
+    public function getSource()
+    {
+        return $this->source;
+    }
+
+    /**
      * @param string $source
      *
      * @return MediaRetriever
@@ -145,6 +153,14 @@ class MediaRetriever implements ContainerAwareInterface
     }
 
     /**
+     * @return boolean
+     */
+    public function isUsePalette()
+    {
+        return $this->usePalette;
+    }
+
+    /**
      * @param boolean $usePalette
      *
      * @return MediaRetriever
@@ -152,6 +168,18 @@ class MediaRetriever implements ContainerAwareInterface
     public function setUsePalette($usePalette)
     {
         $this->usePalette = $usePalette;
+
+        return $this;
+    }
+
+    /**
+     * @param int $colorDiffDelta
+     *
+     * @return MediaRetriever
+     */
+    public function setColorDiffDelta($colorDiffDelta)
+    {
+        $this->colorDiffDelta = $colorDiffDelta;
 
         return $this;
     }
