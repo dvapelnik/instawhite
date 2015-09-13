@@ -29,7 +29,7 @@ class MediaManager implements ContainerAwareInterface
     /**
      * @param mixed $savePath
      *
-     * @return MediaSaver
+     * @return MediaManager
      */
     public function setSavePath($savePath)
     {

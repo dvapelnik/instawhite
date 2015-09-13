@@ -28,3 +28,4 @@ services:
         class: AppBundle\Instagram\ImageComparator
         calls:
             - [ setContainer, [ @service_container ]]
+            - [ setStorageKey, [ instagram.image.color ]]

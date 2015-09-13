@@ -1,6 +1,7 @@
 <?php
 namespace AppBundle\Instagram;
 
+use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Service\Client;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
@@ -198,17 +199,7 @@ class MediaRetriever implements ContainerAwareInterface
         $request = $client->createRequest('GET');
         $request->getQuery()->set('count', $this->itemsPerRequestLimit);
 
-        if ($this->container->get('session')->get('is_logged')) {
-            $request->getQuery()->set(
-                'access_token',
-                $this->container->get('session')->get('instagram')['access_token']
-            );
-        } else {
-            $request->getQuery()->set(
-                'client_id',
-                $this->container->getParameter('instagram.client_id')
-            );
-        }
+        $this->setAuthToRequest($request);
 
         $nextApiUrl = $request->getUrl();
 
@@ -226,6 +217,7 @@ class MediaRetriever implements ContainerAwareInterface
 
                 $items = $responseArray['data'];
 
+                // Filter images only if user need it
                 if ($this->imagesOnly) {
                     $items = array_filter(
                         $items,
@@ -235,18 +227,14 @@ class MediaRetriever implements ContainerAwareInterface
                     );
                 }
 
+                // Retrieve all images and filter by palette if user need it
                 // [{'url', 'path', 'color'}]
                 $items = array_filter(
                     $items,
                     function ($item) use (&$resultArray, $logger) {
                         $imageUrl = $item['images']['low_resolution']['url'];
 
-                        $logger->info(
-                            'Saving image',
-                            array(
-                                'url' => $imageUrl,
-                            )
-                        );
+                        $logger->info('Saving image', array('url' => $imageUrl,));
 
                         $savedPath = $this->mediaManager->saveImage($imageUrl);
                         $colorRGB = $this->imageComparator->getImageMainColor($savedPath, true);
@@ -344,5 +332,20 @@ class MediaRetriever implements ContainerAwareInterface
                     : str_replace('{user-id}', $this->userId, $this->apiMediaUrlSuffix),
             )
         );
+    }
+
+    private function setAuthToRequest(RequestInterface &$request)
+    {
+        if ($this->container->get('session')->get('is_logged')) {
+            $request->getQuery()->set(
+                'access_token',
+                $this->container->get('session')->get('instagram')['access_token']
+            );
+        } else {
+            $request->getQuery()->set(
+                'client_id',
+                $this->container->getParameter('instagram.client_id')
+            );
+        }
     }
 }

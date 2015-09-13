@@ -1,30 +1,21 @@
 <?php
 namespace AppBundle\Instagram;
 
+use AppBundle\Utils\Cache\SessionCacheInterface;
+use AppBundle\Utils\Cache\SessionCacheTrait;
 use ColorThief\ColorThief;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class ImageComparator implements ContainerAwareInterface
+class ImageComparator implements SessionCacheInterface
 {
-    /** @var  ContainerInterface */
-    private $container;
-
-    /**
-     * Sets the Container.
-     *
-     * @param ContainerInterface|null $container A ContainerInterface instance or null
-     *
-     * @api
-     */
-    public function setContainer(ContainerInterface $container = null)
-    {
-        $this->container = $container;
-    }
+    use SessionCacheTrait;
 
     public function getImageMainColor($sourceImage, $isRGB = true)
     {
-        $dominantColor = ColorThief::getColor($sourceImage);
+        if (false === ($dominantColor = $this->getFromCache($sourceImage))) {
+            $dominantColor = ColorThief::getColor($sourceImage);
+
+            $this->addToCache($sourceImage, $dominantColor);
+        }
 
         return $isRGB
             ? $dominantColor

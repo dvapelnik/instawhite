@@ -1,27 +1,13 @@
 <?php
 namespace AppBundle\Instagram;
 
+use AppBundle\Utils\Cache\SessionCacheInterface;
+use AppBundle\Utils\Cache\SessionCacheTrait;
 use Guzzle\Service\Client;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class UserRetriever implements ContainerAwareInterface
+class UserRetriever implements SessionCacheInterface
 {
-    private $storageKey;
-    /** @var  ContainerInterface */
-    private $container;
-
-    /**
-     * Sets the Container.
-     *
-     * @param ContainerInterface|null $container A ContainerInterface instance or null
-     *
-     * @api
-     */
-    public function setContainer(ContainerInterface $container = null)
-    {
-        $this->container = $container;
-    }
+    use SessionCacheTrait;
 
     public function getUserId($username)
     {
@@ -32,7 +18,7 @@ class UserRetriever implements ContainerAwareInterface
 
     private function retrieveUser($username)
     {
-        if (false === ($userApiData = $this->checkInCache($username))) {
+        if (false === ($userApiData = $this->getFromCache($username))) {
             $client = new Client();
 
             $request = $client->get('https://api.instagram.com/v1/users/search');
@@ -76,53 +62,8 @@ class UserRetriever implements ContainerAwareInterface
         return $userApiData;
     }
 
-    private function checkInCache($username)
-    {
-        $storage = $this->getStorage();
-
-        if (isset($storage[$username])) {
-            return $storage[$username];
-        }
-
-        return false;
-    }
-
-    /**
-     * @return mixed
-     */
-    private function getStorage()
-    {
-        return $this->container->get('session')->get($this->storageKey, array());
-    }
-
-    private function addToCache($username, $userId)
-    {
-        $storage = $this->getStorage();
-
-        $storage[$username] = $userId;
-
-        $this->updateStorage($storage);
-    }
-
-    private function updateStorage($storage)
-    {
-        $this->container->get('session')->set($this->storageKey, $storage);
-    }
-
     public function getUserData($username)
     {
         return $this->retrieveUser($username);
-    }
-
-    /**
-     * @param string $storageKey
-     *
-     * @return UserRetriever
-     */
-    public function setStorageKey($storageKey)
-    {
-        $this->storageKey = $storageKey;
-
-        return $this;
     }
 }
