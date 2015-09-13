@@ -31,7 +31,7 @@ class ImageComparator implements ContainerAwareInterface
             : $this->rgb2hex($dominantColor);
     }
 
-    private function rgb2hex($rgb)
+    public function rgb2hex($rgb)
     {
         $hex = "#";
         $hex .= str_pad(dechex($rgb[0]), 2, "0", STR_PAD_LEFT);
@@ -49,7 +49,7 @@ class ImageComparator implements ContainerAwareInterface
             abs($rgb1[2] - $rgb2[2]);
     }
 
-    private function hex2rgb($hex)
+    public function hex2rgb($hex)
     {
         $hex = str_replace("#", "", $hex);
 

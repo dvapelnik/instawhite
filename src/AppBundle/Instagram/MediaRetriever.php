@@ -14,18 +14,24 @@ class MediaRetriever implements ContainerAwareInterface
     /** @var  MediaManager */
     private $mediaManager;
 
+    /** @var  ImageComparator */
+    private $imageComparator;
+
     /** @var  int */
     private $count = 16;
 
     /** @var  string */
     private $source = 'feed';
 
-    /** @var  string */
-    private $accessToken;
+    private $colorDiffDelta = 150;
 
     private $userId;
 
     private $imagesOnly = true;
+
+    private $palette;
+
+    private $usePalette = false;
 
     private $itemsPerRequestLimit = 30;
 
@@ -56,6 +62,26 @@ class MediaRetriever implements ContainerAwareInterface
         $this->mediaManager = $mediaManager;
 
         return $this;
+    }
+
+    /**
+     * @param ImageComparator $imageComparator
+     *
+     * @return MediaRetriever
+     */
+    public function setImageComparator($imageComparator)
+    {
+        $this->imageComparator = $imageComparator;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCount()
+    {
+        return $this->count;
     }
 
     /**
@@ -106,15 +132,38 @@ class MediaRetriever implements ContainerAwareInterface
         return $this;
     }
 
+    /**
+     * @param mixed $palette
+     *
+     * @return MediaRetriever
+     */
+    public function setPalette($palette)
+    {
+        $this->palette = $palette;
+
+        return $this;
+    }
+
+    /**
+     * @param boolean $usePalette
+     *
+     * @return MediaRetriever
+     */
+    public function setUsePalette($usePalette)
+    {
+        $this->usePalette = $usePalette;
+
+        return $this;
+    }
+
     //endregion
 
     public function getImageLinks()
     {
-        $count = $this->count;
-        $mediaManager = $this->mediaManager;
-        $resultArray = array();
+        $logger = $this->container->get('logger');
 
-        $isFullyRequested = true;
+        $count = $this->count;
+        $resultArray = array();
 
         $client = new Client($this->getRequestUrl());
 
@@ -137,6 +186,12 @@ class MediaRetriever implements ContainerAwareInterface
 
         while ($count > 0) {
             try {
+                $logger->info(
+                    'Trying API-request',
+                    array(
+                        'url' => $nextApiUrl,
+                    )
+                );
                 $response = $client->get($nextApiUrl)->send();
 
                 $responseArray = json_decode($response->getBody(true), true);
@@ -152,42 +207,94 @@ class MediaRetriever implements ContainerAwareInterface
                     );
                 }
 
-                $resultArray = array_merge(
-                    $resultArray,
-                    array_map(
-                        function ($item) {
-                            return $item['images']['low_resolution']['url'];
-                        },
-                        $items
-                    )
+                // [{'url', 'path', 'color'}]
+                $items = array_filter(
+                    $items,
+                    function ($item) use (&$resultArray, $logger) {
+                        $imageUrl = $item['images']['low_resolution']['url'];
+
+                        $logger->info(
+                            'Saving image',
+                            array(
+                                'url' => $imageUrl,
+                            )
+                        );
+
+                        $savedPath = $this->mediaManager->saveImage($imageUrl);
+                        $colorRGB = $this->imageComparator->getImageMainColor($savedPath, true);
+                        $colorHex = $this->imageComparator->rgb2hex($colorRGB);
+
+                        $imageArray = array(
+                            'url'   => $imageUrl,
+                            'path'  => $savedPath,
+                            'color' => array(
+                                'rgb' => $colorRGB,
+                                'hex' => $colorHex,
+                            ),
+                        );
+
+                        $colorDiff = null;
+
+                        if ($this->usePalette === false || ($colorDiff = $this->imageComparator->getColorDiff(
+                                $this->palette,
+                                $imageArray['color']['rgb']
+                            )) < $this->colorDiffDelta
+                        ) {
+                            $resultArray[] = $imageArray;
+
+                            return true;
+                        }
+
+                        if (null !== $colorDiff) {
+                            $logger->info('Color diff', array('color-diff' => $colorDiff));
+                        }
+
+                        return false;
+                    }
                 );
 
                 if (count($responseArray['pagination'])) {
                     $nextApiUrl = $responseArray['pagination']['next_url'];
                 } else {
-                    $isFullyRequested = false;
-
                     break;
                 }
             } catch (\Guzzle\Http\Exception\ClientErrorResponseException $e) {
                 $_request = $e->getRequest();
                 $_response = $e->getResponse();
 
+                if ($_response->getReasonPhrase() === 'BAD REQUEST' &&
+                    $_response->getStatusCode() === 400
+                ) {
+
+                    if ($_request->getQuery()->get('client_id')) {
+                        throw new MayBeNeedAuthException();
+                    }
+
+                    throw new AccessDeniedException('Access denied', 0, $e);
+                }
+
                 if ($_request->getQuery()->get('client_id') &&
                     $_response->getReasonPhrase() === 'BAD REQUEST' &&
                     $_response->getStatusCode() === 400
                 ) {
-                    throw new MayBeNeedAuthException();
+
                 }
             } catch (\Exception $e) {
                 break;
             }
 
+            $logger->info(
+                'Info about collected images',
+                array(
+                    'collected-count' => count($resultArray),
+                )
+            );
+
             $count -= count($items);
         }
 
         // Save images
-        $imageUrls = array_slice(
+        $images = array_slice(
             $resultArray,
             0,
             count($resultArray) > $this->count
@@ -195,12 +302,7 @@ class MediaRetriever implements ContainerAwareInterface
                 : count($resultArray)
         );
 
-        $savedImageFullPaths = $mediaManager->saveImages($imageUrls);
-
-        return array(
-            $savedImageFullPaths,
-            $isFullyRequested,
-        );
+        return $images;
     }
 
     private function getRequestUrl()
@@ -215,6 +317,4 @@ class MediaRetriever implements ContainerAwareInterface
             )
         );
     }
-
-
 }

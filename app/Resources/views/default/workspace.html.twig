@@ -27,6 +27,16 @@
                 <div class="g-4" style="text-align: left">{{ form_errors(form.imagesOnly) }}</div>
             </div>
             <div class="g-row">
+                <div class="g-4" style="text-align: right"> {{ form_label(form.palette) }}</div>
+                <div class="g-4" style="text-align: center">{{ form_widget(form.palette) }}</div>
+                <div class="g-4" style="text-align: left">{{ form_errors(form.palette) }}</div>
+            </div>
+            <div class="g-row">
+                <div class="g-4" style="text-align: right"> {{ form_label(form.usePalette) }}</div>
+                <div class="g-4" style="text-align: center">{{ form_widget(form.usePalette) }}</div>
+                <div class="g-4" style="text-align: left">{{ form_errors(form.usePalette) }}</div>
+            </div>
+            <div class="g-row">
                 <div class="g-12">
                     <p class="f-buttons" style="text-align: center;">
                         {{ form_widget(form.from_media) }}
@@ -37,4 +47,31 @@
             {{ form_end(form) }}
         </div>
     </div>
+{% endblock %}
+
+{% block js_head %}
+    {{ parent() }}
+
+    <script type="text/javascript" src="{{ asset('assets/js/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('assets/js/jquery-ui.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('assets/js/jquery.colorpicker.js') }}"></script>
+{% endblock %}
+
+{% block js_foot %}
+    {{ parent() }}
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#form_palette').colorpicker({
+                flat: true
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+
+    <link rel="stylesheet" href="{{ asset('assets/css/jqueri-ui/themes/ui-darkness/jquery-ui.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/colorpicker/jquery.colorpicker.css') }}">
 {% endblock %}

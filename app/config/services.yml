@@ -12,6 +12,7 @@ services:
         calls:
             - [ setContainer, [ @service_container ]]
             - [ setMediaManager, [ @instagram.media_manager ]]
+            - [ setImageComparator, [ @instagram.image_comparator ]]
     instagram.user_retriever:
         class: AppBundle\Instagram\UserRetriever
         calls:

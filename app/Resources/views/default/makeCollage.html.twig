@@ -2,11 +2,15 @@
 
 {% block body %}
     {% for flashMessage in app.session.flashbag.get('is-not-fully-requested-notice') %}
-        <div class="g-row">
-            <div class="g-12">
-                <div class="f-message"> {{ flashMessage }} </div>
+        {% if imagesIsFound %}
+            <div class="g-row">
+                <div class="g-12">
+                    <div class="f-message">
+                        <h3>{{ flashMessage }}</h3>
+                    </div>
+                </div>
             </div>
-        </div>
+        {% endif %}
     {% endfor %}
 
     <div class="g-row">
@@ -22,12 +26,31 @@
             </a>
         </div>
         <div class="g-9">
-            {% for image in links %}
-                <img
-                        src="{{ image.url }}"
-                        alt="{{ image.url }}"
-                        style="width: 100px; border: 1px solid {{ image.color }}">
-            {% endfor %}
+            {% dump(palette) %}
+            {% if palette %}
+                <div class="g-row">
+                    <div class="g-2"><span>Requested palette:</span></div>
+                    <div class="g-7">
+                        <div style="height: 18px; width: 100%; background-color: {{ palette }}">
+                        </div>
+                    </div>
+                </div>
+
+            {% endif %}
+            <div class="g-row">
+                <div class="g-9">
+                    {% if imagesIsFound %}
+                        {% for image in links %}
+                            <img
+                                    src="{{ image.url }}"
+                                    alt="{{ image.url }}"
+                                    style="width: 100px; border: 1px solid {{ image.color.hex }}">
+                        {% endfor %}
+                    {% else %}
+                        <h3>Images not found</h3>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

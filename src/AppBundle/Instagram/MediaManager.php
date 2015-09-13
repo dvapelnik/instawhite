@@ -102,8 +102,6 @@ class MediaManager implements ContainerAwareInterface
     {
         $savedImagePaths = array();
 
-        $that = $this;
-
         $requests = array_map(
             function ($imageUrl) use (&$savedImagePaths) {
                 $destination = $this->getDestinationFileName($imageUrl);

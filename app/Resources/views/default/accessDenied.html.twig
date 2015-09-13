@@ -1,0 +1,15 @@
+{% extends '::base.html.twig' %}
+
+{% block body %}
+    <div class="g-row" style="margin-top: 100px;">
+        <div class="g-12">
+            <h2 style="text-align: center;">This Account is Private</h2>
+
+            <p style="text-align: center;">
+                Request to follow <a style="font-weight: bold; text-decoration: none;"
+                                     href="https://instagram.com/{{ userApiData.username }}"
+                                     target="_blank">{{ userApiData.username }}</a> to see their photos and videos.
+            </p>
+        </div>
+    </div>
+{% endblock %}

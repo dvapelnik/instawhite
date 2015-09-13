@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Instagram\AccessDeniedException;
 use AppBundle\Instagram\MayBeNeedAuthException;
 use AppBundle\Instagram\UserNotFoundException;
 use Guzzle\Service\Client;
@@ -133,7 +134,26 @@ class DefaultController extends Controller
                         ),
                     ),
                 )
-            )->add('imagesOnly', 'checkbox', array('label' => 'Exclude videos?', 'data' => true))
+            )
+            ->add(
+                'palette',
+                null,
+                array(
+                    'label'    => 'Select palette if you want',
+                    'required' => false,
+                )
+            )
+            ->add(
+                'usePalette',
+                'checkbox',
+                array
+                (
+                    'label'    => 'Filter by selected palette?',
+                    'data'     => false,
+                    'required' => false,
+                )
+            )
+            ->add('imagesOnly', 'checkbox', array('label' => 'Exclude videos?', 'data' => true))
             ->add(
                 'from_media',
                 'submit',
@@ -169,7 +189,9 @@ class DefaultController extends Controller
                     'count'      => $data['count'],
                     'source'     => $source,
                     'imagesOnly' => $data['imagesOnly'],
-                    'username' => $data['username'],
+                    'palette'    => $data['palette'],
+                    'usePalette' => $data['usePalette'],
+                    'username'   => $data['username'],
                 )
             );
         }
@@ -189,6 +211,8 @@ class DefaultController extends Controller
     public function makeCollage(Request $request)
     {
         $imRetriever = $this->get('instagram.media_retriever');
+
+        $userApiData = $this->get('instagram.user_retriever')->getUserData($request->get('username'));
 
         //region Update options
         if (null !== $request->get('count', null)) {
@@ -217,16 +241,35 @@ class DefaultController extends Controller
         } else {
             throw $this->createNotFoundException();
         }
+
+        if (null !== $request->get('palette')) {
+            $imRetriever->setPalette(
+                $this->get('instagram.image_comparator')->hex2rgb(
+                    $request->get('palette')
+                )
+            );
+        }
+
+        if (null !== $request->get('usePalette', null)) {
+            $imRetriever->setUsePalette(!!intval($request->get('usePalette')));
+        }
         //endregion
 
         try {
-            list($images, $isFullyRequested) = $imRetriever->getImageLinks();
+            $images = $imRetriever->getImageLinks();
         } catch (MayBeNeedAuthException $e) {
             $this->addFlash('try-to-auth', 'Looks like action need to auth with Instagram');
 
             $this->get('session')->set('auth-redirect', $request->getUri());
 
             return $this->redirectToRoute('login');
+        } catch (AccessDeniedException $e) {
+            return $this->render(
+                ':default:accessDenied.html.twig',
+                array(
+                    'userApiData' => $userApiData,
+                )
+            );
         } catch (\Exception $e) {
             $this->get('logger')->warning(
                 'Exception',
@@ -237,23 +280,22 @@ class DefaultController extends Controller
             );
         }
 
-        if (false === $isFullyRequested) {
+        if (count($images) < $imRetriever->getCount()) {
             $this->addFlash(
                 'is-not-fully-requested-notice',
-                'Count of images on medis less then requested count'
+                'Count of images on media less then requested count'
             );
-        }
-
-        foreach ($images as &$image) {
-            $image['color'] = $this->container->get('instagram.image_comparator')
-                ->getImageMainColor($image['path'], false);
         }
 
         return $this->render(
             ':default:makeCollage.html.twig',
             array(
-                'links' => $images,
-                'user'  => $this->get('instagram.user_retriever')->getUserData($request->get('username')),
+                'imagesIsFound' => count($images) > 0,
+                'links'         => $images,
+                'user'          => $userApiData,
+                'palette'       => $request->get('palette', null) === null
+                    ? false
+                    : '#'.$request->get('palette', null),
             )
         );
     }
