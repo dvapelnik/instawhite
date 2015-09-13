@@ -28,7 +28,10 @@
             </div>
             <div class="g-row">
                 <div class="g-4" style="text-align: right"> {{ form_label(form.palette) }}</div>
-                <div class="g-4" style="text-align: center">{{ form_widget(form.palette) }}</div>
+                <div class="g-4" style="text-align: center">
+                    {{ form_widget(form.palette) }}
+                    <div id="color-avatar" style="display: inline-block; width: 10px; height: 10px;"></div>
+                </div>
                 <div class="g-4" style="text-align: left">{{ form_errors(form.palette) }}</div>
             </div>
             <div class="g-row">
@@ -67,9 +70,17 @@
 
     <script type="text/javascript">
         $(document).ready(function () {
-            $('#form_palette').colorpicker({
-                flat: true
-            });
+            $('#form_palette')
+                    .colorpicker({
+                        flat: true
+                    })
+                    .on('change', function (event) {
+                        var hex = $(event.target).val();
+
+                        $('#color-avatar').css('backgroundColor', '#' + hex);
+
+                        $('#form_usePalette').prop('checked', true);
+                    });
         });
     </script>
 {% endblock %}
