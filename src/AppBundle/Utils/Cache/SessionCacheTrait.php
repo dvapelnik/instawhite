@@ -61,4 +61,9 @@ trait SessionCacheTrait
     {
         $this->container->get('session')->set($this->storageKey, $storage);
     }
+
+    protected function hasKey($key)
+    {
+        return isset($this->getStorage()[$key]);
+    }
 }

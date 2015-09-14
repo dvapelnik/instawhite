@@ -22,6 +22,16 @@
                 <div class="g-4" style="text-align: left">{{ form_errors(form.count) }}</div>
             </div>
             <div class="g-row">
+                <div class="g-4" style="text-align: right"> {{ form_label(form.width) }}</div>
+                <div class="g-4" style="text-align: center">{{ form_widget(form.width) }}</div>
+                <div class="g-4" style="text-align: left">{{ form_errors(form.width) }}</div>
+            </div>
+            <div class="g-row">
+                <div class="g-4" style="text-align: right"> {{ form_label(form.height) }}</div>
+                <div class="g-4" style="text-align: center">{{ form_widget(form.height) }}</div>
+                <div class="g-4" style="text-align: left">{{ form_errors(form.height) }}</div>
+            </div>
+            <div class="g-row">
                 <div class="g-4" style="text-align: right"> {{ form_label(form.imagesOnly) }}</div>
                 <div class="g-4" style="text-align: center">{{ form_widget(form.imagesOnly) }}</div>
                 <div class="g-4" style="text-align: left">{{ form_errors(form.imagesOnly) }}</div>

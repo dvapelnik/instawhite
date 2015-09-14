@@ -32,7 +32,6 @@
             </a>
         </div>
         <div class="g-9">
-            {% dump(palette) %}
             {% if palette %}
                 <div class="g-row">
                     <div class="g-2"><span>Requested palette:</span></div>
@@ -46,18 +45,30 @@
                 </div>
 
             {% endif %}
+
             <div class="g-row">
                 <div class="g-9">
-                    {% if imagesIsFound %}
-                        {% for image in links %}
-                            <img
-                                    src="{{ image.url }}"
-                                    alt="{{ image.url }}"
-                                    style="width: 100px; border: 1px solid {{ image.color.hex }}">
-                        {% endfor %}
-                    {% else %}
-                        <h3>Images not found</h3>
+                    {% if collageHashKey %}
+                        <div class="g-row">
+                            <div class="g-9">
+                                <img src="{{ path('generate_collage', { hash: collageHashKey }) }}" alt="">
+                            </div>
+                        </div>
                     {% endif %}
+                    <div class="g-row">
+                        <div class="g-9">
+                            {% if imagesIsFound %}
+                                {% for image in links %}
+                                    <img
+                                            src="{{ image.url }}"
+                                            alt="{{ image.url }}"
+                                            style="width: 100px; border: 1px solid {{ image.color.hex }}">
+                                {% endfor %}
+                            {% else %}
+                                <h3>Images not found</h3>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

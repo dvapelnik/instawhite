@@ -162,6 +162,8 @@ class DefaultController extends Controller
                 )
             )
             ->add('imagesOnly', 'checkbox', array('label' => 'Exclude videos?', 'data' => true))
+            ->add('width', 'number', array('data' => 400))
+            ->add('height', 'number', array('data' => 400))
             ->add(
                 'from_media',
                 'submit',
@@ -201,6 +203,8 @@ class DefaultController extends Controller
                     'usePalette' => $data['usePalette'],
                     'username'   => $data['username'],
                     'colorDelta' => $data['colorDelta'],
+                    'width'  => $data['width'],
+                    'height' => $data['height'],
                 )
             );
         }
@@ -300,21 +304,33 @@ class DefaultController extends Controller
             );
         }
 
-        dump($imRetriever->isUsePalette());
+        $collageHashKey = count($images)
+            ? $this->get('cross_request_session_proxy')->setObject($images)
+            : false;
 
         return $this->render(
             ':default:makeCollage.html.twig',
             array(
-                'imagesIsFound' => count($images) > 0,
-                'links'         => $images,
-                'user'          => $userApiData,
-                'palette'      => $imRetriever->isUsePalette() && $request->get('palette', null) !== null
+                'imagesIsFound'  => count($images) > 0,
+                'links'          => $images,
+                'user'           => $userApiData,
+                'palette'        => $imRetriever->isUsePalette() && $request->get('palette', null) !== null
                     ? '#'.$request->get('palette', null)
                     : false,
-                'sourceSuffix' => $imRetriever->getSource() === 'feed'
+                'sourceSuffix'   => $imRetriever->getSource() === 'feed'
                     ? 'own feed'
                     : 'recent media',
+                'collageHashKey' => $collageHashKey,
             )
         );
+    }
+
+    /**
+     * @Route("/workspace/collage/image/{hash}", name="generate_collage")
+     * @Method("GET")
+     */
+    public function generateCollage(Request $request, $hash)
+    {
+        $images = $this->get('cross_request_session_proxy')->getObject($hash);
     }
 }
