@@ -96,12 +96,13 @@ class CollageMaker
 
         $countByX = $countByY = $gridWidthInCells;
 
-        $counter = 0;
-        $imagesInCollage = array();
+        $imagesForCollageData = array();
 
-        $yCoordinateCounter = 5;
+        //region Prepare images to collage
+        $counter = 0;
+        $yCoordinateCounter = 0;
         for ($iX = 0; $iX < $countByX; $iX++) {
-            $xCoordinateCounter = 5;
+            $xCoordinateCounter = 0;
 
             for ($iY = 0; $iY < $countByY; $iY++) {
                 if (isset($images[$counter])) {
@@ -115,7 +116,12 @@ class CollageMaker
                             },
                             array_filter(
                                 array_reduce(
-                                    $imagesInCollage,
+                                    array_map(
+                                        function ($item) {
+                                            return $item['image'];
+                                        },
+                                        $imagesForCollageData
+                                    ),
                                     function ($carry, $image) {
                                         $oid = spl_object_hash($image);
 
@@ -145,7 +151,6 @@ class CollageMaker
                     )];
                 }
 
-                $imagesInCollage[] = $image;
 
                 $x = $xCoordinateCounter;
                 $y = $yCoordinateCounter;
@@ -155,15 +160,58 @@ class CollageMaker
                     rand(-$this->rotateDegreeDelta, $this->rotateDegreeDelta)
                 );
 
-                $canvas->compositeImage($image, \Imagick::COMPOSITE_OVER, $x, $y);
-
                 $xCoordinateCounter += $imageSize;
-
+                $imagesForCollageData[] = array(
+                    'image' => $image,
+                    'point' => array($x, $y),
+                );
                 $counter++;
             }
 
             $yCoordinateCounter += $imageSize;
         }
+        //endregion
+
+        $imagesForCollage = array_map(
+            function ($imageForCollage) {
+                return $imageForCollage['image'];
+            },
+            $imagesForCollageData
+        );
+
+        $widthAddition = $this->getWidthAddition($imagesForCollage, $imageSize);
+        $heightAddition = $this->getHeightAddition($imagesForCollage, $imageSize);
+
+        $temporaryCanvas = new \Imagick();
+        $temporaryCanvas->newImage(
+            $this->size + $widthAddition,
+            $this->size + $heightAddition,
+            new \ImagickPixel('none')
+        );
+        $temporaryCanvas->setBackgroundColor(new \ImagickPixel('none'));
+        $temporaryCanvas->setImageFormat('png');
+
+        foreach ($imagesForCollageData as $imageItem) {
+            $temporaryCanvas->compositeImage(
+                $imageItem['image'],
+                \Imagick::COMPOSITE_OVER,
+                $imageItem['point'][0],
+                $imageItem['point'][1]
+            );
+        }
+
+        $temporaryCanvas->scaleImage(
+            $temporaryCanvas->getImageWidth() * 0.9,
+            $temporaryCanvas->getImageHeight() * 0.9,
+            true
+        );
+
+        $canvas->compositeImage(
+            $temporaryCanvas,
+            \Imagick::COMPOSITE_OVER,
+            ($canvas->getImageWidth() - $temporaryCanvas->getImageWidth()) / 2,
+            ($canvas->getImageWidth() - $temporaryCanvas->getImageHeight()) / 2
+        );
 
         return $canvas;
     }
@@ -173,19 +221,45 @@ class CollageMaker
         return pow(ceil(sqrt(count($images))), 2);
     }
 
-    /**
-     * @param \Imagick[] $images
-     *
-     * @return float
-     */
-    private function getScaleRate($images)
+    private function getWidthAddition($images, $imageSize)
     {
-        $countOnGrid = $this->getCountOfCells($images);
+        $filteredImages = array();
 
-        $summaryImageArea = $countOnGrid * pow($images[0]->getImageWidth(), 2);
+        foreach (array_values($images) as $key => $image) {
+            if (($key + 1) % sqrt(count($images))) {
+                $filteredImages[] = $image;
+            }
+        }
 
-        $canvasArea = pow($this->size, 2);
+        $maxAddition = array_reduce(
+            $filteredImages,
+            function ($carry, $image) use ($imageSize) {
+                /** @var \Imagick $image */
+                return $carry < $image->getImageWidth() - $imageSize
+                    ? $image->getImageWidth() - $imageSize
+                    : $carry;
+            },
+            0
+        );
 
-        return sqrt($canvasArea / $summaryImageArea);
+        return $maxAddition;
+    }
+
+    private function getHeightAddition($images, $imageSize)
+    {
+        $filteredImages = array_slice($images, -sqrt(count($images)));
+
+        $maxAddition = array_reduce(
+            $filteredImages,
+            function ($carry, $image) use ($imageSize) {
+                /** @var \Imagick $image */
+                return $carry < $image->getImageWidth() - $imageSize
+                    ? $image->getImageHeight() - $imageSize
+                    : $carry;
+            },
+            0
+        );
+
+        return $maxAddition;
     }
 }
