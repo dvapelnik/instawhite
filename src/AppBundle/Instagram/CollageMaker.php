@@ -3,9 +3,6 @@ namespace AppBundle\Instagram;
 
 class CollageMaker
 {
-    private $resizeDeltaUp = 10;
-    private $resizeDeltaDown = 40;
-
     private $rotateDegreeDelta = 10;
 
     private $randomizedPoints = array();
@@ -95,9 +92,18 @@ class CollageMaker
 
         $scaleRate = $this->getScaleRate($images);
         $borderWidth = ceil(min($this->width, $this->height) / 100);
+        $cellSize = $this->getCellSize($images);
 
-        $counter = 0;
-        foreach ($images as &$image) {
+        $xCoordinateCounter = 0;
+        $yCoordinateCounter = 0;
+
+        for ($i = 0; $i < $this->getCountOfCells($images); $i++) {
+            if (!isset($images[$i])) {
+                break;
+            }
+
+            $image = $images[$i];
+
             $image->borderImage(new \ImagickPixel('white'), $borderWidth, $borderWidth);
             $image->rotateImage(new \ImagickPixel('none'), rand(-$this->rotateDegreeDelta, $this->rotateDegreeDelta));
             $image->scaleImage(
@@ -106,14 +112,21 @@ class CollageMaker
                 true
             );
 
-            list($x, $y) = $this->getNextRandomizedPoint(
-                array(0, 0),
-                array($this->width - $image->getImageWidth(), $this->height - $image->getImageHeight())
+            $x = rand(
+                $xCoordinateCounter,
+                max($cellSize, $image->getImageWidth()) - min($cellSize, $image->getImageWidth())
+            );
+            $y = rand(
+                $yCoordinateCounter,
+                max($cellSize, $image->getImageHeight()) - min($cellSize, $image->getImageHeight())
             );
 
             $canvas->compositeImage($image, \Imagick::COMPOSITE_OVER, $x, $y);
 
-            $counter += 20;
+            $xCoordinateCounter += $cellSize;
+            if ($xCoordinateCounter > $this->width - $cellSize) {
+                $yCoordinateCounter += $cellSize;
+            }
         }
 
         return $canvas;
@@ -139,6 +152,47 @@ class CollageMaker
         $canvasArea = $this->width * $this->height;
 
         return sqrt($canvasArea / $summaryImageArea);
+    }
+
+    /**
+     * @param \Imagick[] $images
+     */
+    protected function getCellSize($images)
+    {
+        $imageSizeAverage = $this->getImageSizeAverage($images);
+        $maxCountOfImages = $this->getCountOfCells($images);
+
+        $coeff = $maxCountOfImages / count($images);
+
+        return $imageSizeAverage * $coeff;
+    }
+
+    /**
+     * @param \Imagick[] $images
+     *
+     * @return float
+     */
+    protected function getImageSizeAverage($images)
+    {
+        return array_reduce(
+            $images,
+            function ($carry, $image) {
+                /** @var \Imagick $image */
+                return $carry + $image->getImageWidth();
+            },
+            0
+        ) / count($images);
+    }
+
+    protected function getCountOfCells($images)
+    {
+        $imageSizeAverage = $this->getImageSizeAverage($images);
+        $countByX = $this->width / $imageSizeAverage;
+        $countByY = $this->height / $imageSizeAverage;
+
+        $maxCountOfImages = ceil($countByX * $countByY);
+
+        return $maxCountOfImages;
     }
 
     protected function getNextRandomizedPoint($minPoint, $maxPoint)
