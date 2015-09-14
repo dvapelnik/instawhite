@@ -5,41 +5,30 @@ class CollageMaker
 {
     private $rotateDegreeDelta = 10;
 
-    private $randomizedPoints = array();
-
-    private $width;
-
-    private $height;
+    private $size;
 
     private $images;
 
     /**
      * CollageMaker constructor.
      *
-     * @param $width
-     * @param $height
+     * @param $size
      * @param $images
-     * @param $profilePicture
      */
-    public function __construct($width, $height, $images)
+    public function __construct($size, $images)
     {
-        $this->width = $width;
-        $this->height = $height;
+        $this->size = $size;
         $this->images = $images;
 
         $this->check();
     }
 
-    protected function check()
+    private function check()
     {
         $message = null;
 
-        if (intval($this->width) != $this->width) {
-            $message = "'width' value should be an integer";
-        }
-
-        if (intval($this->height) != $this->height) {
-            $message = "'height' value should be an integer";
+        if (intval($this->size) != $this->size) {
+            $message = "'size' value should be an integer";
         }
 
         if (!is_array($this->images) || array_reduce(
@@ -72,11 +61,11 @@ class CollageMaker
         shuffle($this->images);
 
         $canvas = new \Imagick();
-        $canvas->newImage($this->width, $this->height, new \ImagickPixel('black'));
+        $canvas->newImage($this->size, $this->size, new \ImagickPixel('black'));
         $canvas->setImageFormat('png');
 
         $background = new \Imagick($this->images[rand(0, count($this->images) - 1)]['path']);
-        $background->scaleImage(max($this->width, $this->height), max($this->width, $this->height), true);
+        $background->scaleImage(max($this->size, $this->size), max($this->size, $this->size), true);
         $background->blurImage(10, 10);
         $background->setColorspace(\Imagick::COLOR_BLACK);
 
@@ -91,42 +80,89 @@ class CollageMaker
         );
 
         $scaleRate = $this->getScaleRate($images);
-        $borderWidth = ceil(min($this->width, $this->height) / 100);
-        $cellSize = $this->getCellSize($images);
+        $borderWidth = ceil(min($this->size, $this->size) / 100);
+        $imageSize = 0;
 
-        $xCoordinateCounter = 0;
-        $yCoordinateCounter = 0;
-
-        for ($i = 0; $i < $this->getCountOfCells($images); $i++) {
-            if (!isset($images[$i])) {
-                break;
-            }
-
-            $image = $images[$i];
-
-            $image->borderImage(new \ImagickPixel('white'), $borderWidth, $borderWidth);
-            $image->rotateImage(new \ImagickPixel('none'), rand(-$this->rotateDegreeDelta, $this->rotateDegreeDelta));
+        foreach ($images as &$image) {
             $image->scaleImage(
-                ceil($image->getImageWidth() * $scaleRate),
+                ceil($image->getImageWidth() * $scaleRate) - $borderWidth * 2,
                 $image->getImageHeight(),
                 true
             );
+            $imageSize = $image->getImageWidth();
+            $image->borderImage(new \ImagickPixel('white'), $borderWidth, $borderWidth);
+        }
+        unset ($image);
 
-            $x = rand(
-                $xCoordinateCounter,
-                max($cellSize, $image->getImageWidth()) - min($cellSize, $image->getImageWidth())
-            );
-            $y = rand(
-                $yCoordinateCounter,
-                max($cellSize, $image->getImageHeight()) - min($cellSize, $image->getImageHeight())
-            );
+        $countByX = $countByY = sqrt($this->getCountOfCells($images));
 
-            $canvas->compositeImage($image, \Imagick::COMPOSITE_OVER, $x, $y);
+        $counter = 0;
+        $imagesInCollage = array();
 
-            $xCoordinateCounter += $cellSize;
-            if ($xCoordinateCounter > $this->width - $cellSize) {
-                $yCoordinateCounter += $cellSize;
+        $yCoordinateCounter = 5;
+        for ($iX = 0; $iX < $countByX; $iX++) {
+            $xCoordinateCounter = 5;
+
+            for ($iY = 0; $iY < $countByY; $iY++) {
+                if (isset($images[$counter])) {
+                    $image = $images[$counter];
+                } else {
+                    // Get images which used on collage only one times at current moment
+                    $filteredImagesInCollage = array_values(
+                        array_map(
+                            function ($item) {
+                                return $item['object'];
+                            },
+                            array_filter(
+                                array_reduce(
+                                    $imagesInCollage,
+                                    function ($carry, $image) {
+                                        $oid = spl_object_hash($image);
+
+                                        if (isset($carry[$oid])) {
+                                            $carry[$oid]['counter']++;
+                                        } else {
+                                            $carry[$oid] = array(
+                                                'counter' => 1,
+                                                'object'  => $image,
+                                            );
+                                        }
+
+                                        return $carry;
+                                    },
+                                    array()
+                                ),
+                                function ($item) {
+                                    return $item['counter'] == 1;
+                                }
+                            )
+                        )
+                    );
+
+                    $image = $filteredImagesInCollage[rand(
+                        0,
+                        count($filteredImagesInCollage) - 2         // Do not use last item
+                    )];
+                }
+
+                $imagesInCollage[] = $image;
+
+                $x = $xCoordinateCounter;
+                $y = $yCoordinateCounter;
+
+                $image->rotateImage(
+                    new \ImagickPixel('none'),
+                    rand(-$this->rotateDegreeDelta, $this->rotateDegreeDelta)
+                );
+
+                $canvas->compositeImage($image, \Imagick::COMPOSITE_OVER, $x, $y);
+
+                $xCoordinateCounter += $imageSize;
+
+                $counter++;
             }
+
+            $yCoordinateCounter += $imageSize;
         }
 
         return $canvas;
@@ -134,80 +170,22 @@ class CollageMaker
 
     /**
      * @param \Imagick[] $images
-     * @param array $canvasSize
      *
      * @return float
      */
-    protected function getScaleRate($images)
+    private function getScaleRate($images)
     {
-        $summaryImageArea = array_reduce(
-            $images,
-            function ($carry, $image) {
-                /** @var \Imagick $image */
-                return $carry + ($image->getImageWidth() * $image->getImageHeight());
-            },
-            0
-        );
+        $countOnGrid = $this->getCountOfCells($images);
 
-        $canvasArea = $this->width * $this->height;
+        $summaryImageArea = $countOnGrid * pow($images[0]->getImageWidth(), 2);
+
+        $canvasArea = pow($this->size, 2);
 
         return sqrt($canvasArea / $summaryImageArea);
     }
 
-    /**
-     * @param \Imagick[] $images
-     */
-    protected function getCellSize($images)
+    private function getCountOfCells($images)
     {
-        $imageSizeAverage = $this->getImageSizeAverage($images);
-        $maxCountOfImages = $this->getCountOfCells($images);
-
-        $coeff = $maxCountOfImages / count($images);
-
-        return $imageSizeAverage * $coeff;
-    }
-
-    /**
-     * @param \Imagick[] $images
-     *
-     * @return float
-     */
-    protected function getImageSizeAverage($images)
-    {
-        return array_reduce(
-            $images,
-            function ($carry, $image) {
-                /** @var \Imagick $image */
-                return $carry + $image->getImageWidth();
-            },
-            0
-        ) / count($images);
-    }
-
-    protected function getCountOfCells($images)
-    {
-        $imageSizeAverage = $this->getImageSizeAverage($images);
-        $countByX = $this->width / $imageSizeAverage;
-        $countByY = $this->height / $imageSizeAverage;
-
-        $maxCountOfImages = ceil($countByX * $countByY);
-
-        return $maxCountOfImages;
-    }
-
-    protected function getNextRandomizedPoint($minPoint, $maxPoint)
-    {
-//        if (count($this->randomizedPoints) == 0) {
-        $x = rand($minPoint[0], $maxPoint[0]);
-        $y = rand($minPoint[1], $maxPoint[1]);
-//        } else {
-//
-//        }
-
-        $point = array($x, $y);
-
-        $this->randomizedPoints[] = $point;
-
-        return $point;
+        return pow(ceil(sqrt(count($images))), 2);
     }
 }

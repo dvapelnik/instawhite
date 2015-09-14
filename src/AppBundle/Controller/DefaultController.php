@@ -164,8 +164,7 @@ class DefaultController extends Controller
                 )
             )
             ->add('imagesOnly', 'checkbox', array('label' => 'Exclude videos?', 'data' => true))
-            ->add('width', 'number', array('data' => 400))
-            ->add('height', 'number', array('data' => 400))
+            ->add('size', 'number', array('data' => 400, 'label' => 'Size (px)'))
             ->add(
                 'from_media',
                 'submit',
@@ -205,8 +204,7 @@ class DefaultController extends Controller
                     'usePalette' => $data['usePalette'],
                     'username'   => $data['username'],
                     'colorDelta' => $data['colorDelta'],
-                    'width'  => $data['width'],
-                    'height' => $data['height'],
+                    'size' => $data['size'],
                 )
             );
         }
@@ -309,10 +307,7 @@ class DefaultController extends Controller
         $collageHashKey = count($images)
             ? $this->get('cross_request_session_proxy')->setObject(
                 array(
-                    'size'   => array(
-                        'height' => $request->get('height', 600),
-                        'width'  => $request->get('width', 600),
-                    ),
+                    'size' => $request->get('size', 400),
                     'images' => $images,
                 )
             )
@@ -344,8 +339,7 @@ class DefaultController extends Controller
         $collageData = $this->get('cross_request_session_proxy')->getObject($hash);
 
         $collageMaker = new CollageMaker(
-            $collageData['size']['width'],
-            $collageData['size']['height'],
+            $collageData['size'],
             $collageData['images']
         );
 
