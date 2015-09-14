@@ -51,7 +51,10 @@
                     {% if collageHashKey %}
                         <div class="g-row">
                             <div class="g-9">
-                                <img src="{{ path('generate_collage', { hash: collageHashKey }) }}" alt="">
+                                <img
+                                        style="max-width: 100%"
+                                        src="{{ path('generate_collage', { hash: collageHashKey }) }}"
+                                        alt="">
                             </div>
                         </div>
                     {% endif %}

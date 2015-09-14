@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Instagram\AccessDeniedException;
+use AppBundle\Instagram\CollageMaker;
 use AppBundle\Instagram\MayBeNeedAuthException;
 use AppBundle\Instagram\UserNotFoundException;
 use Guzzle\Service\Client;
@@ -10,6 +11,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Range;
 
@@ -305,7 +307,15 @@ class DefaultController extends Controller
         }
 
         $collageHashKey = count($images)
-            ? $this->get('cross_request_session_proxy')->setObject($images)
+            ? $this->get('cross_request_session_proxy')->setObject(
+                array(
+                    'size'   => array(
+                        'height' => $request->get('height', 600),
+                        'width'  => $request->get('width', 600),
+                    ),
+                    'images' => $images,
+                )
+            )
             : false;
 
         return $this->render(
@@ -329,8 +339,21 @@ class DefaultController extends Controller
      * @Route("/workspace/collage/image/{hash}", name="generate_collage")
      * @Method("GET")
      */
-    public function generateCollage(Request $request, $hash)
+    public function generateCollage($hash)
     {
-        $images = $this->get('cross_request_session_proxy')->getObject($hash);
+        $collageData = $this->get('cross_request_session_proxy')->getObject($hash);
+
+        $collageMaker = new CollageMaker(
+            $collageData['size']['width'],
+            $collageData['size']['height'],
+            $collageData['images']
+        );
+
+        $imagickCanvas = $collageMaker->makeCollage();
+
+        $response = new Response($imagickCanvas);
+        $response->headers->set('Content-Type', 'image/png');
+
+        return $response;
     }
 }
