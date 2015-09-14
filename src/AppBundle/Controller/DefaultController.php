@@ -131,7 +131,7 @@ class DefaultController extends Controller
                         new Range(
                             array(
                                 'min' => 1,
-                                'max' => 100,
+                                'max' => 300,
                             )
                         ),
                     ),

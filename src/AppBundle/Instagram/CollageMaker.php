@@ -79,22 +79,22 @@ class CollageMaker
             $this->images
         );
 
-        $scaleRate = $this->getScaleRate($images);
-        $borderWidth = ceil(min($this->size, $this->size) / 100);
-        $imageSize = 0;
+        $gridWidthInCells = sqrt($this->getCountOfCells($images));
+        $imageSize = ceil($this->size / sqrt($this->getCountOfCells($images)));
+        $borderWidth = ceil($imageSize * 5 / 100);
 
         foreach ($images as &$image) {
             $image->scaleImage(
-                ceil($image->getImageWidth() * $scaleRate) - $borderWidth * 2,
+                ceil($this->size / $gridWidthInCells) - $borderWidth * 2,
                 $image->getImageHeight(),
                 true
             );
-            $imageSize = $image->getImageWidth();
             $image->borderImage(new \ImagickPixel('white'), $borderWidth, $borderWidth);
         }
         unset ($image);
 
-        $countByX = $countByY = sqrt($this->getCountOfCells($images));
+
+        $countByX = $countByY = $gridWidthInCells;
 
         $counter = 0;
         $imagesInCollage = array();
@@ -168,6 +168,11 @@ class CollageMaker
         return $canvas;
     }
 
+    private function getCountOfCells($images)
+    {
+        return pow(ceil(sqrt(count($images))), 2);
+    }
+
     /**
      * @param \Imagick[] $images
      *
@@ -182,10 +187,5 @@ class CollageMaker
         $canvasArea = pow($this->size, 2);
 
         return sqrt($canvasArea / $summaryImageArea);
-    }
-
-    private function getCountOfCells($images)
-    {
-        return pow(ceil(sqrt(count($images))), 2);
     }
 }
