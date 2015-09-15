@@ -48,9 +48,10 @@
 
             <div class="g-row">
                 <div class="g-9">
-                    {% if collageHashKey %}
-                        <div class="g-row">
-                            <div class="g-9" style="text-align: center;">
+                    <div class="g-row">
+                        <div class="g-9" style="text-align: center;">
+                            {% if collageHashKey %}
+
                                 {% set collageUrl = collagepath ~  collageHashKey ~ '.png' %}
 
                                 <a href="{{ asset(collageUrl) }}" target="_blank">
@@ -59,9 +60,12 @@
                                             src="{{ asset(collageUrl) }}"
                                             alt="">
                                 </a>
-                            </div>
+
+                            {% else %}
+                                <h2 style="text-align: center">Images not found</h2>
+                            {% endif %}
                         </div>
-                    {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

@@ -352,17 +352,18 @@ class DefaultController extends Controller
             );
         }
 
-        $collageHashKey = md5(
-            serialize(
-                array(
+        $collageHashKey = count($images) > 0 ?
+            md5(
+                serialize(
                     array(
-                        'size'    => $size,
-                        'images'  => $images,
-                        'pattern' => $request->get('pattern', 'grid'),
-                    ),
+                        array(
+                            'size'    => $size,
+                            'images'  => $images,
+                            'pattern' => $request->get('pattern', 'grid'),
+                        ),
+                    )
                 )
-            )
-        );
+            ) : false;
 
         if (!file_exists(
             $collageFileName = implode(
@@ -377,21 +378,24 @@ class DefaultController extends Controller
             )
         )
         ) {
-            $collageMaker = new CollageMaker(
-                $size,
-                $images,
-                $this->get('instagram.filler_factory')->makeFiller($request->get('pattern', 'grid'))
-            );
-            $imagickCollage = $collageMaker->makeCollage();
+            if ($collageHashKey) {
+                $collageMaker = new CollageMaker(
+                    $size,
+                    $images,
+                    $this->get('instagram.filler_factory')->makeFiller($request->get('pattern', 'grid'))
+                );
+                $imagickCollage = $collageMaker->makeCollage();
 
-            $imagickCollage->writeImage($collageFileName);
+                $imagickCollage->writeImage($collageFileName);
+            }
         }
 
         return $this->render(
             ':default:makeCollage.html.twig',
             array(
                 'links'          => $images,
-                'user' => $request->get('source') === 'media'
+                'imagesIsFound' => count($images) > 0,
+                'user'          => $request->get('source') === 'media'
                     ? $userApiData
                     : $this->get('session')->get('instagram')['user'],
                 'palette'        => $imRetriever->isUsePalette() && $request->get('palette', null) !== null
