@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="g-row" style="padding-top: 100px;">
+        <div class="g-12">
+            <h1 style="text-align: center">Ooops....</h1>
+
+            <p style="text-align: center">User "{{ username }}" not found</p>
+
+            <p style="text-align: center">
+                <a href="{{ path('workspace') }}">Back</a>
+            </p>
+        </div>
+    </div>
+{% endblock %}

@@ -266,7 +266,16 @@ class DefaultController extends Controller
     {
         $imRetriever = $this->get('instagram.media_retriever');
 
-        $userApiData = $this->get('instagram.user_retriever')->getUserData($request->get('username'));
+        try {
+            $userApiData = $this->get('instagram.user_retriever')->getUserData($request->get('username'));
+        } catch (UserNotFoundException $e) {
+            return $this->redirectToRoute(
+                'instagram_user_not_found',
+                array(
+                    'username' => $request->get('username'),
+                )
+            );
+        }
 
         list($size, $count) = $imRetriever->defineSizeAndCount(
             $request->get('size', null),
@@ -416,5 +425,19 @@ class DefaultController extends Controller
         $response->headers->set('Content-Type', 'image/png');
 
         return $response;
+    }
+
+    /**
+     * @Route("/user-not-found/{username}", name="instagram_user_not_found")
+     * @Method("GET")
+     */
+    public function userNotFound($username)
+    {
+        return $this->render(
+            'default/userNotFound.html.twig',
+            array(
+                'username' => $username,
+            )
+        );
     }
 }
