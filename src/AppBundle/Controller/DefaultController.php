@@ -126,7 +126,7 @@ class DefaultController extends Controller
                 'number',
                 array(
                     'label'       => 'Count of images',
-                    'attr' => array(
+                    'attr'     => array(
                         'placeholder' => 16,
                     ),
                     'required' => false,
@@ -180,7 +180,11 @@ class DefaultController extends Controller
             ->add(
                 'imagesOnly',
                 'checkbox',
-                array('label' => 'Exclude videos?', 'data' => true)
+                array(
+                    'label'    => 'Exclude videos?',
+                    'required' => false,
+                    'data'     => true,
+                )
             )
             ->add(
                 'size',
