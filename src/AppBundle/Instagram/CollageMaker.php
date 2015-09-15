@@ -6,12 +6,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class CollageMaker
 {
-    /** @var  ContainerInterface */
-    private $container;
-
     private $rotateDegreeDelta = 10;
 
     private $size;
+
+    private $defaultImageSize;
 
     private $images;
 
@@ -23,13 +22,15 @@ class CollageMaker
      *
      * @param $size
      * @param $images
+     * @param $filler
+     * @param int $defaultImageSize
      */
-    public function __construct($size, $images, $filler)
+    public function __construct($size = null, $images, $filler, $defaultImageSize = 100)
     {
         $this->size = $size;
         $this->images = $images;
-
         $this->filler = $filler;
+        $this->defaultImageSize = $defaultImageSize;
 
         $this->check();
     }
@@ -83,6 +84,18 @@ class CollageMaker
     {
         shuffle($this->images);
 
+        /** @var \Imagick[] $images */
+        $images = array_map(
+            function ($imageData) {
+                return new \Imagick($imageData['path']);
+            },
+            $this->images
+        );
+
+        if ($this->size === null) {
+            $this->size = sqrt($this->getCountOfCells($images)) * $this->defaultImageSize;
+        }
+
         $canvas = new \Imagick();
         $canvas->newImage($this->size, $this->size, new \ImagickPixel('black'));
         $canvas->setImageFormat('png');
@@ -93,14 +106,6 @@ class CollageMaker
         $background->setColorspace(\Imagick::COLOR_BLACK);
 
         $canvas->compositeImage($background, \Imagick::COMPOSITE_OVER, 0, 0);
-
-        /** @var \Imagick[] $images */
-        $images = array_map(
-            function ($imageData) {
-                return new \Imagick($imageData['path']);
-            },
-            $this->images
-        );
 
         $gridWidthInCells = sqrt($this->getCountOfCells($images));
         $imageSize = ceil($this->size / sqrt($this->getCountOfCells($images)));

@@ -348,4 +348,25 @@ class MediaRetriever implements ContainerAwareInterface
             );
         }
     }
+
+    public function defineSizeAndCount($size, $count)
+    {
+        $defaultImageSize = 100;
+
+        if (!$size and !$count) {
+            throw new \Exception("One of 'size' or 'count' should be defined");
+        }
+
+        if (!$size) {
+            $countOnOneDimension = ceil(sqrt($count));
+
+            $size = $countOnOneDimension * $defaultImageSize;
+        }
+
+        if (!$count) {
+            $count = floor($size / $defaultImageSize);
+        }
+
+        return array($size, $count);
+    }
 }

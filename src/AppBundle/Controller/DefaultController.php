@@ -10,9 +10,9 @@ use Guzzle\Service\Client;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Range;
 
 class DefaultController extends Controller
@@ -109,6 +109,7 @@ class DefaultController extends Controller
     {
         $formBuilder = $this->createFormBuilder();
 
+        //region Build form
         $form = $formBuilder
             ->add(
                 'username',
@@ -125,9 +126,8 @@ class DefaultController extends Controller
                 'number',
                 array(
                     'label'       => 'Count of images',
-                    'data'        => 16,
+                    'required' => false,
                     'constraints' => array(
-                        new NotBlank(),
                         new Range(
                             array(
                                 'min' => 1,
@@ -171,8 +171,27 @@ class DefaultController extends Controller
                     'data'  => 150,
                 )
             )
-            ->add('imagesOnly', 'checkbox', array('label' => 'Exclude videos?', 'data' => true))
-            ->add('size', 'number', array('data' => 400, 'label' => 'Size (px)'))
+            ->add(
+                'imagesOnly',
+                'checkbox',
+                array('label' => 'Exclude videos?', 'data' => true)
+            )
+            ->add(
+                'size',
+                'number',
+                array(
+                    'label'       => 'Size (px)',
+                    'required'    => false,
+                    'constraints' => array(
+                        new Range(
+                            array(
+                                'min' => 100,
+                                'max' => 1024,
+                            )
+                        ),
+                    ),
+                )
+            )
             ->add(
                 'from_media',
                 'submit',
@@ -192,19 +211,21 @@ class DefaultController extends Controller
                     ),
                 )
             )->getForm();
+        //endregion
 
         $form->handleRequest($request);
 
         if ($form->isValid()) {
             $data = $form->getData();
 
-            $source = $form->get('from_feed')->isClicked()
-                ? 'feed'
-                : 'media';
+            if (!isset($data['count']) && !isset($data['size'])) {
+                $form->addError(new FormError("One of 'Count' or 'Size' should be defined"));
+            } else {
+                $source = $form->get('from_feed')->isClicked()
+                    ? 'feed'
+                    : 'media';
 
-            return $this->redirectToRoute(
-                'make_collage',
-                array(
+                $redirectDataArray = array(
                     'count'      => $data['count'],
                     'source'     => $source,
                     'imagesOnly' => $data['imagesOnly'],
@@ -214,8 +235,17 @@ class DefaultController extends Controller
                     'colorDelta' => $data['colorDelta'],
                     'size'    => $data['size'],
                     'pattern' => $data['pattern'],
-                )
-            );
+                );
+
+                if (isset($data['size'])) {
+                    $redirectDataArray['size'] = $data['size'];
+                }
+
+                return $this->redirectToRoute(
+                    'make_collage',
+                    $redirectDataArray
+                );
+            }
         }
 
         return $this->render(
@@ -236,25 +266,25 @@ class DefaultController extends Controller
 
         $userApiData = $this->get('instagram.user_retriever')->getUserData($request->get('username'));
 
-        //region Update options
-        if (null !== $request->get('count', null)) {
-            $imRetriever->setCount(intval($request->get('count')));
+        list($size, $count) = $imRetriever->defineSizeAndCount(
+            $request->get('size', null),
+            $request->get('count', null)
+        );
+
+        $imRetriever->setCount($count);
+
+        if (null !== ($source = $request->get('source', null))) {
+            $imRetriever->setSource($source);
         }
 
-        if (null !== $request->get('source', null)) {
-            $imRetriever->setSource($request->get('source'));
+        if (null !== ($imagesOnly = $request->get('imagesOnly', null))) {
+            $imRetriever->setImagesOnly(!!intval($imagesOnly));
         }
 
-        if (null !== $request->get('imagesOnly', null)) {
-            $imRetriever->setImagesOnly(!!intval($request->get('imagesOnly')));
-        }
-
-        if (null !== $request->get('username', null)) {
+        if (null !== ($username = $request->get('username', null))) {
             try {
                 $imRetriever->setUserId(
-                    $this->get('instagram.user_retriever')->getUserId(
-                        $request->get('username')
-                    )
+                    $this->get('instagram.user_retriever')->getUserId($username)
                 );
             } catch (UserNotFoundException $e) {
                 throw $this->createNotFoundException();
@@ -264,20 +294,18 @@ class DefaultController extends Controller
             throw $this->createNotFoundException();
         }
 
-        if (null !== $request->get('palette')) {
+        if (null !== ($palette = $request->get('palette'))) {
             $imRetriever->setPalette(
-                $this->get('instagram.image_comparator')->hex2rgb(
-                    $request->get('palette')
-                )
+                $this->get('instagram.image_comparator')->hex2rgb($palette)
             );
         }
 
-        if (null !== $request->get('usePalette', null)) {
-            $imRetriever->setUsePalette(!!intval($request->get('usePalette')));
+        if (null !== ($usePalette = $request->get('usePalette', null))) {
+            $imRetriever->setUsePalette(!!intval($usePalette));
         }
 
-        if (null !== $request->get('colorDelta', null)) {
-            $imRetriever->setColorDiffDelta(intval($request->get('colorDelta')));
+        if (null !== ($colorDiffDelta = $request->get('colorDelta', null))) {
+            $imRetriever->setColorDiffDelta(intval($colorDiffDelta));
         }
         //endregion
 
@@ -316,7 +344,7 @@ class DefaultController extends Controller
         $collageHashKey = count($images)
             ? $this->get('cross_request_session_proxy')->setObject(
                 array(
-                    'size'    => $request->get('size', 400),
+                    'size'   => $size,
                     'images' => $images,
                     'pattern' => $request->get('pattern', 'grid'),
                 )

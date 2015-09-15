@@ -12,6 +12,11 @@
                 </div>
             </div>
             <div class="g-row">
+                <div class="g-12" style="color: darkred;">
+                    {{ form_errors(form) }}
+                </div>
+            </div>
+            <div class="g-row">
                 <div class="g-4" style="text-align: right"> {{ form_label(form.username) }}</div>
                 <div class="g-4" style="text-align: center">{{ form_widget(form.username) }}</div>
                 <div class="g-4" style="text-align: left">{{ form_errors(form.username) }}</div>
