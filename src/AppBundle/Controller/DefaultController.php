@@ -318,7 +318,9 @@ class DefaultController extends Controller
             array(
                 'imagesIsFound'  => count($images) > 0,
                 'links'          => $images,
-                'user'           => $userApiData,
+                'user' => $request->get('source') === 'media'
+                    ? $userApiData
+                    : $this->get('session')->get('instagram')['user'],
                 'palette'        => $imRetriever->isUsePalette() && $request->get('palette', null) !== null
                     ? '#'.$request->get('palette', null)
                     : false,
