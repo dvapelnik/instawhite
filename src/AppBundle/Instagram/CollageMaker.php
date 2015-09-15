@@ -1,11 +1,14 @@
 <?php
 namespace AppBundle\Instagram;
 
-use AppBundle\Instagram\Filler\GridFiller;
 use AppBundle\Instagram\Filler\RandomFiller;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class CollageMaker
 {
+    /** @var  ContainerInterface */
+    private $container;
+
     private $rotateDegreeDelta = 10;
 
     private $size;
@@ -21,17 +24,12 @@ class CollageMaker
      * @param $size
      * @param $images
      */
-    public function __construct($size, $images, $pattern)
+    public function __construct($size, $images, $filler)
     {
         $this->size = $size;
         $this->images = $images;
 
-        if ($pattern === 'grid') {
-            $this->filler = new GridFiller();
-        }
-        if ($pattern === 'random') {
-            $this->filler = new RandomFiller();
-        }
+        $this->filler = $filler;
 
         $this->check();
     }
@@ -64,6 +62,18 @@ class CollageMaker
         if ($message !== null) {
             throw new \InvalidArgumentException($message);
         }
+    }
+
+    /**
+     * Sets the Container.
+     *
+     * @param ContainerInterface|null $container A ContainerInterface instance or null
+     *
+     * @api
+     */
+    public function setContainer(ContainerInterface $container = null)
+    {
+        // TODO: Implement setContainer() method.
     }
 
     /**

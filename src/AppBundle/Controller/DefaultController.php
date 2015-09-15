@@ -353,7 +353,7 @@ class DefaultController extends Controller
         $collageMaker = new CollageMaker(
             $collageData['size'],
             $collageData['images'],
-            $collageData['pattern']
+            $this->get('instagram.filler_factory')->makeFiller($collageData['pattern'])
         );
 
         $imagickCanvas = $collageMaker->makeCollage();

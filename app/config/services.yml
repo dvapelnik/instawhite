@@ -34,3 +34,5 @@ services:
         calls:
             - [ setContainer, [ @service_container ]]
             - [ setStorageKey, [ instagram.image.color ]]
+    instagram.filler_factory:
+        class: AppBundle\Instagram\Filler\FillerFactory
