@@ -126,6 +126,9 @@ class DefaultController extends Controller
                 'number',
                 array(
                     'label'       => 'Count of images',
+                    'attr' => array(
+                        'placeholder' => 16,
+                    ),
                     'required' => false,
                     'constraints' => array(
                         new Range(
@@ -150,6 +153,9 @@ class DefaultController extends Controller
                 null,
                 array(
                     'label'    => 'Select palette if you want',
+                    'attr' => array(
+                        'placeholder' => 'Click here!',
+                    ),
                     'required' => false,
                 )
             )
@@ -181,6 +187,9 @@ class DefaultController extends Controller
                 'number',
                 array(
                     'label'       => 'Size (px)',
+                    'attr' => array(
+                        'placeholder' => 800,
+                    ),
                     'required'    => false,
                     'constraints' => array(
                         new Range(
