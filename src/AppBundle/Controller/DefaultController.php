@@ -341,15 +341,40 @@ class DefaultController extends Controller
             );
         }
 
-        $collageHashKey = count($images)
-            ? $this->get('cross_request_session_proxy')->setObject(
+        $collageHashKey = md5(
+            serialize(
                 array(
-                    'size'   => $size,
-                    'images' => $images,
-                    'pattern' => $request->get('pattern', 'grid'),
+                    array(
+                        'size'    => $size,
+                        'images'  => $images,
+                        'pattern' => $request->get('pattern', 'grid'),
+                    ),
                 )
             )
-            : false;
+        );
+
+        if (!file_exists(
+            $collageFileName = implode(
+                DIRECTORY_SEPARATOR,
+                array(
+                    $this->get('kernel')->getRootDir(),
+                    '..',
+                    'web',
+                    $this->getParameter('instagram.collage_save_path'),
+                    $collageHashKey.'.png',
+                )
+            )
+        )
+        ) {
+            $collageMaker = new CollageMaker(
+                $size,
+                $images,
+                $this->get('instagram.filler_factory')->makeFiller($request->get('pattern', 'grid'))
+            );
+            $imagickCollage = $collageMaker->makeCollage();
+
+            $imagickCollage->writeImage($collageFileName);
+        }
 
         return $this->render(
             ':default:makeCollage.html.twig',

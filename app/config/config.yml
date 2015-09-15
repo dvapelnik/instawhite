@@ -9,6 +9,7 @@ parameters:
     locale: en
     instagram.client_id: df28d3df650b451fbbc62eba97e7793a
     instagram.client_secret: 4fbfc5ffa57248b0a19a0bdd44dd367e
+    instagram.collage_save_path: "images/collages"
 
 framework:
     #esi:             ~
@@ -38,6 +39,8 @@ framework:
 twig:
     debug:            "%kernel.debug%"
     strict_variables: "%kernel.debug%"
+    globals:
+        collagepath: images/collages/
 
 # Assetic Configuration
 assetic:

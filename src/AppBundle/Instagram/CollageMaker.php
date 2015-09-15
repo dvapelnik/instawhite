@@ -78,7 +78,7 @@ class CollageMaker
     }
 
     /**
-     * @return resource
+     * @return \Imagick
      */
     public function makeCollage()
     {
