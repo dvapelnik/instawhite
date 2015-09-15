@@ -354,7 +354,6 @@ class DefaultController extends Controller
         return $this->render(
             ':default:makeCollage.html.twig',
             array(
-                'imagesIsFound'  => count($images) > 0,
                 'links'          => $images,
                 'user' => $request->get('source') === 'media'
                     ? $userApiData
