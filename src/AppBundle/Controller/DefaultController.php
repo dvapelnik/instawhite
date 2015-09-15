@@ -206,8 +206,8 @@ class DefaultController extends Controller
                 array(
                     'label' => 'Make from own feed',
                     'attr'  => array(
-                        'class'    => 'f-bu f-bu-success',
-                        'disabled' => !$this->get('session')->get('is_logged', false),
+                        'class' => 'f-bu f-bu-success',
+//                        'disabled' => !$this->get('session')->get('is_logged', false),
                     ),
                 )
             )->getForm();
@@ -218,13 +218,15 @@ class DefaultController extends Controller
         if ($form->isValid()) {
             $data = $form->getData();
 
+            $source = $form->get('from_feed')->isClicked()
+                ? 'feed'
+                : 'media';
+
             if (!isset($data['count']) && !isset($data['size'])) {
                 $form->addError(new FormError("One of 'Count' or 'Size' should be defined"));
+            } elseif ($source === 'feed' && !$this->get('session')->get('is_logged', false)) {
+                $form->addError(new FormError('You are not authorized with Instagram for use own feed. Use login'));
             } else {
-                $source = $form->get('from_feed')->isClicked()
-                    ? 'feed'
-                    : 'media';
-
                 $redirectDataArray = array(
                     'count'      => $data['count'],
                     'source'     => $source,
