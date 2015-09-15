@@ -138,6 +138,14 @@ class DefaultController extends Controller
                 )
             )
             ->add(
+                'pattern',
+                'choice',
+                array(
+                    'choices' => array('grid' => 'Grid', 'random' => 'Random'),
+                    'label'   => 'Select fill type',
+                )
+            )
+            ->add(
                 'palette',
                 null,
                 array(
@@ -204,7 +212,8 @@ class DefaultController extends Controller
                     'usePalette' => $data['usePalette'],
                     'username'   => $data['username'],
                     'colorDelta' => $data['colorDelta'],
-                    'size' => $data['size'],
+                    'size'    => $data['size'],
+                    'pattern' => $data['pattern'],
                 )
             );
         }
@@ -307,8 +316,9 @@ class DefaultController extends Controller
         $collageHashKey = count($images)
             ? $this->get('cross_request_session_proxy')->setObject(
                 array(
-                    'size' => $request->get('size', 400),
+                    'size'    => $request->get('size', 400),
                     'images' => $images,
+                    'pattern' => $request->get('pattern', 'grid'),
                 )
             )
             : false;
@@ -342,7 +352,8 @@ class DefaultController extends Controller
 
         $collageMaker = new CollageMaker(
             $collageData['size'],
-            $collageData['images']
+            $collageData['images'],
+            $collageData['pattern']
         );
 
         $imagickCanvas = $collageMaker->makeCollage();

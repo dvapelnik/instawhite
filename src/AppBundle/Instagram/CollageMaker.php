@@ -1,6 +1,9 @@
 <?php
 namespace AppBundle\Instagram;
 
+use AppBundle\Instagram\Filler\GridFiller;
+use AppBundle\Instagram\Filler\RandomFiller;
+
 class CollageMaker
 {
     private $rotateDegreeDelta = 10;
@@ -9,16 +12,26 @@ class CollageMaker
 
     private $images;
 
+    /** @var RandomFiller CollageFillerInterface */
+    private $filler;
+
     /**
      * CollageMaker constructor.
      *
      * @param $size
      * @param $images
      */
-    public function __construct($size, $images)
+    public function __construct($size, $images, $pattern)
     {
         $this->size = $size;
         $this->images = $images;
+
+        if ($pattern === 'grid') {
+            $this->filler = new GridFiller();
+        }
+        if ($pattern === 'random') {
+            $this->filler = new RandomFiller();
+        }
 
         $this->check();
     }
@@ -99,77 +112,17 @@ class CollageMaker
         $imagesForCollageData = array();
 
         //region Prepare images to collage
-        $counter = 0;
-        $yCoordinateCounter = 0;
-        for ($iX = 0; $iX < $countByX; $iX++) {
-            $xCoordinateCounter = 0;
-
-            for ($iY = 0; $iY < $countByY; $iY++) {
-                if (isset($images[$counter])) {
-                    $image = $images[$counter];
-                } else {
-                    // Get images which used on collage only one times at current moment
-                    $filteredImagesInCollage = array_values(
-                        array_map(
-                            function ($item) {
-                                return $item['object'];
-                            },
-                            array_filter(
-                                array_reduce(
-                                    array_map(
-                                        function ($item) {
-                                            return $item['image'];
-                                        },
-                                        $imagesForCollageData
-                                    ),
-                                    function ($carry, $image) {
-                                        $oid = spl_object_hash($image);
-
-                                        if (isset($carry[$oid])) {
-                                            $carry[$oid]['counter']++;
-                                        } else {
-                                            $carry[$oid] = array(
-                                                'counter' => 1,
-                                                'object'  => $image,
-                                            );
-                                        }
-
-                                        return $carry;
-                                    },
-                                    array()
-                                ),
-                                function ($item) {
-                                    return $item['counter'] == 1;
-                                }
-                            )
-                        )
-                    );
-
-                    $image = $filteredImagesInCollage[rand(
-                        0,
-                        count($filteredImagesInCollage) - 2         // Do not use last item
-                    )];
-                }
-
-
-                $x = $xCoordinateCounter;
-                $y = $yCoordinateCounter;
-
-                $image->rotateImage(
-                    new \ImagickPixel('none'),
-                    rand(-$this->rotateDegreeDelta, $this->rotateDegreeDelta)
-                );
-
-                $xCoordinateCounter += $imageSize;
-                $imagesForCollageData[] = array(
-                    'image' => $image,
-                    'point' => array($x, $y),
-                );
-                $counter++;
-            }
-
-            $yCoordinateCounter += $imageSize;
-        }
+        $this->filler->fillPreparedCollage(
+            $imagesForCollageData,
+            array(
+                'size'              => $this->size,
+                'countByX'          => $countByX,
+                'countByY'          => $countByY,
+                'images'            => $images,
+                'imageSize'         => $imageSize,
+                'rotateDegreeDelta' => $this->rotateDegreeDelta,
+            )
+        );
         //endregion
 
         $imagesForCollage = array_map(
@@ -179,13 +132,35 @@ class CollageMaker
             $imagesForCollageData
         );
 
-        $widthAddition = $this->getWidthAddition($imagesForCollage, $imageSize);
-        $heightAddition = $this->getHeightAddition($imagesForCollage, $imageSize);
+        $temporaryCanvas = $this->makeTemporaryCollage(
+            $imagesForCollageData,
+            array(
+                $this->size + $this->getWidthAddition($imagesForCollage, $imageSize),
+                $this->size + $this->getHeightAddition($imagesForCollage, $imageSize),
+            )
+        );
 
+        $canvas->compositeImage(
+            $temporaryCanvas,
+            \Imagick::COMPOSITE_OVER,
+            ($canvas->getImageWidth() - $temporaryCanvas->getImageWidth()) / 2,
+            ($canvas->getImageWidth() - $temporaryCanvas->getImageHeight()) / 2
+        );
+
+        return $canvas;
+    }
+
+    private function getCountOfCells($images)
+    {
+        return pow(ceil(sqrt(count($images))), 2);
+    }
+
+    private function makeTemporaryCollage($imagesForCollageData, $temporaryCanvasSize)
+    {
         $temporaryCanvas = new \Imagick();
         $temporaryCanvas->newImage(
-            $this->size + $widthAddition,
-            $this->size + $heightAddition,
+            $temporaryCanvasSize[0],
+            $temporaryCanvasSize[1],
             new \ImagickPixel('none')
         );
         $temporaryCanvas->setBackgroundColor(new \ImagickPixel('none'));
@@ -206,19 +181,7 @@ class CollageMaker
             true
         );
 
-        $canvas->compositeImage(
-            $temporaryCanvas,
-            \Imagick::COMPOSITE_OVER,
-            ($canvas->getImageWidth() - $temporaryCanvas->getImageWidth()) / 2,
-            ($canvas->getImageWidth() - $temporaryCanvas->getImageHeight()) / 2
-        );
-
-        return $canvas;
-    }
-
-    private function getCountOfCells($images)
-    {
-        return pow(ceil(sqrt(count($images))), 2);
+        return $temporaryCanvas;
     }
 
     private function getWidthAddition($images, $imageSize)

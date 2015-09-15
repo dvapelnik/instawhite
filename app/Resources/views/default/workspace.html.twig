@@ -32,6 +32,11 @@
                 <div class="g-4" style="text-align: left">{{ form_errors(form.imagesOnly) }}</div>
             </div>
             <div class="g-row">
+                <div class="g-4" style="text-align: right"> {{ form_label(form.pattern) }}</div>
+                <div class="g-4" style="text-align: center">{{ form_widget(form.pattern) }}</div>
+                <div class="g-4" style="text-align: left">{{ form_errors(form.pattern) }}</div>
+            </div>
+            <div class="g-row">
                 <div class="g-4" style="text-align: right"> {{ form_label(form.colorDelta) }}</div>
                 <div class="g-4" style="text-align: center">{{ form_widget(form.colorDelta) }}</div>
                 <div class="g-4" style="text-align: left">{{ form_errors(form.colorDelta) }}</div>
