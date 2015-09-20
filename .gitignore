@@ -1,6 +1,7 @@
 /.idea
 
 /.vagrant/machines/default
+/.vagrant/auth.json
 /index.html
 
 /bower_components/
