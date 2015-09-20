@@ -126,10 +126,10 @@ class DefaultController extends Controller
                 'number',
                 array(
                     'label'       => 'Count of images',
-                    'attr'     => array(
+                    'attr'        => array(
                         'placeholder' => 16,
                     ),
-                    'required' => false,
+                    'required'    => false,
                     'constraints' => array(
                         new Range(
                             array(
@@ -153,7 +153,7 @@ class DefaultController extends Controller
                 null,
                 array(
                     'label'    => 'Select palette if you want',
-                    'attr' => array(
+                    'attr'     => array(
                         'placeholder' => 'Click here!',
                     ),
                     'required' => false,
@@ -191,7 +191,7 @@ class DefaultController extends Controller
                 'number',
                 array(
                     'label'       => 'Size (px)',
-                    'attr' => array(
+                    'attr'        => array(
                         'placeholder' => 800,
                     ),
                     'required'    => false,
@@ -248,8 +248,8 @@ class DefaultController extends Controller
                     'usePalette' => $data['usePalette'],
                     'username'   => $data['username'],
                     'colorDelta' => $data['colorDelta'],
-                    'size'    => $data['size'],
-                    'pattern' => $data['pattern'],
+                    'size'       => $data['size'],
+                    'pattern'    => $data['pattern'],
                 );
 
                 if (isset($data['size'])) {
@@ -407,8 +407,8 @@ class DefaultController extends Controller
             ':default:makeCollage.html.twig',
             array(
                 'links'          => $images,
-                'imagesIsFound' => count($images) > 0,
-                'user'          => $request->get('source') === 'media'
+                'imagesIsFound'  => count($images) > 0,
+                'user'           => $request->get('source') === 'media'
                     ? $userApiData
                     : $this->get('session')->get('instagram')['user'],
                 'palette'        => $imRetriever->isUsePalette() && $request->get('palette', null) !== null
