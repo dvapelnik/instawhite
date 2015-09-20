@@ -1,6 +1,7 @@
 # InstaWhite
 
 **InstaWhite** - make the collage from your feed or user medias!
+Live demo on http://instawhite.vapelnik.pp.ua
 
 ## Usage
 
